@@ -133,30 +133,6 @@
             font-size: 16px;
             margin: -10px 0 20px 0;
         }
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .tab {
-            flex: 1;
-            padding: 12px;
-            background: #e0e0e0;
-            border: none;
-            cursor: pointer;
-            border-radius: 8px;
-            font-weight: bold;
-        }
-        .tab.active {
-            background: #b9052d;
-            color: white;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
         .countdown-box {
             background: linear-gradient(135deg, #6e031b 0%, #b9052d 100%);
             color: white;
@@ -492,93 +468,56 @@
         </div>
         
         <div id="form-container">
-            <div class="tabs">
-                <button class="tab active" onclick="showTab('neue')">Neue Bestellung</button>
-                <button class="tab" onclick="showTab('bearbeiten')">Bestellung ändern</button>
-            </div>
+            <div id="success" class="success">✓ Bestellung erfolgreich!</div>
+            <div id="error" class="error">✗ Fehler beim Senden!</div>
             
-            <!-- Tab: Neue Bestellung -->
-            <div id="tab-neue" class="tab-content active">
-                <div id="success" class="success">✓ Bestellung erfolgreich!</div>
-                <div id="error" class="error">✗ Fehler beim Senden!</div>
+            <!-- Einheitliches Login/Register Form -->
+            <div id="auth-form-container">
+                <h3>Anmelden</h3>
+                <p class="help-text">Gib deinen Namen ein. Das Passwort ist optional - lasse es leer für schnellen Zugang.</p>
                 
-                <!-- Einheitliches Login/Register Form -->
-                <div id="auth-form-container">
-                    <h3>Anmelden</h3>
-                    <p class="help-text">Gib deinen Namen ein. Das Passwort ist optional - lasse es leer für schnellen Zugang.</p>
+                <form id="auth-form">
+                    <label>Name: *</label>
+                    <input type="text" id="auth-name" required placeholder="Max Mustermann" autocomplete="username">
                     
-                    <form id="auth-form">
-                        <label>Name: *</label>
-                        <input type="text" id="auth-name" required placeholder="Max Mustermann" autocomplete="username">
-                        
-                        <label>Passwort: (optional)</label>
-                        <input type="password" id="auth-passwort" placeholder="Optional - leer lassen für schnellen Zugang" autocomplete="current-password">
-                        
-                        <button type="submit">Weiter</button>
-                    </form>
-                </div>
-                
-                <!-- Passwort-Setz-Dialog -->
-                <div id="password-set-container" class="hidden">
-                    <h3>Passwort setzen</h3>
-                    <p class="help-text">Der Admin hat angefordert, dass du ein Passwort setzt.</p>
+                    <label>Passwort: (optional)</label>
+                    <input type="password" id="auth-passwort" placeholder="Optional - leer lassen für schnellen Zugang" autocomplete="current-password">
                     
-                    <form id="password-set-form">
-                        <label>Neues Passwort: *</label>
-                        <input type="password" id="new-password" required placeholder="Mindestens 4 Zeichen" minlength="4">
-                        
-                        <label>Passwort wiederholen: *</label>
-                        <input type="password" id="new-password-confirm" required placeholder="Passwort bestätigen" minlength="4">
-                        
-                        <button type="submit">Passwort speichern</button>
-                    </form>
-                </div>
-                
-                <!-- Bestellformular (nach Login) -->
-                <div id="order-form-container" class="hidden">
-                    <h3>Deine Bestellung</h3>
-                    <p class="help-text">Angemeldet als: <strong id="logged-in-user"></strong></p>
-                    
-                    <form id="order-form">
-                        <label>Anzahl Weißwürste: *</label>
-                        <input type="number" id="wuerste" value="0" min="0" max="50" required>
-                        
-                        <label>Anzahl Brezn: *</label>
-                        <input type="number" id="brezn" value="0" min="0" max="50" required>
-                        
-                        <button type="submit">Bestellung absenden</button>
-                        <button type="button" onclick="logout()" class="secondary" style="margin-top: 5px;">Abmelden</button>
-                    </form>
-                </div>
-            </div>
-            
-            <!-- Tab: Bestellung ändern -->
-            <div id="tab-bearbeiten" class="tab-content">
-                <div id="edit-success" class="success">✓ Bestellung aktualisiert!</div>
-                <div id="edit-error" class="error">✗ Fehler: Name oder Passwort falsch!</div>
-                
-                <form id="edit-form">
-                    <label>Dein Name: *</label>
-                    <input type="text" id="edit-name" required placeholder="Max Mustermann" autocomplete="username">
-                    
-                    <label>Dein Passwort:</label>
-                    <input type="password" id="edit-passwort" placeholder="Nur wenn gesetzt" autocomplete="current-password">
-                    
-                    <button type="submit" class="edit">Bestellung laden</button>
+                    <button type="submit">Weiter</button>
                 </form>
+            </div>
+            
+            <!-- Passwort-Setz-Dialog -->
+            <div id="password-set-container" class="hidden">
+                <h3>Passwort setzen</h3>
+                <p class="help-text">Der Admin hat angefordert, dass du ein Passwort setzt.</p>
                 
-                <div id="edit-data" style="display:none;">
-                    <hr style="margin: 20px 0; border-color: #e0e0e0;">
-                    <h3>Bestellung ändern:</h3>
+                <form id="password-set-form">
+                    <label>Neues Passwort: *</label>
+                    <input type="password" id="new-password" required placeholder="Mindestens 4 Zeichen" minlength="4">
                     
+                    <label>Passwort wiederholen: *</label>
+                    <input type="password" id="new-password-confirm" required placeholder="Passwort bestätigen" minlength="4">
+                    
+                    <button type="submit">Passwort speichern</button>
+                </form>
+            </div>
+            
+            <!-- Bestellformular (nach Login) -->
+            <div id="order-form-container" class="hidden">
+                <h3>Deine Bestellung</h3>
+                <p class="help-text">Angemeldet als: <strong id="logged-in-user"></strong></p>
+                
+                <form id="order-form">
                     <label>Anzahl Weißwürste: *</label>
-                    <input type="number" id="edit-wuerste" min="0" max="50" required>
+                    <input type="number" id="wuerste" value="0" min="0" max="50" required>
                     
                     <label>Anzahl Brezn: *</label>
-                    <input type="number" id="edit-brezn" min="0" max="50" required>
+                    <input type="number" id="brezn" value="0" min="0" max="50" required>
                     
-                    <button onclick="updateOrder()" class="edit">Änderungen speichern</button>
-                </div>
+                    <button type="submit" id="order-submit-btn">Bestellung absenden</button>
+                    <button type="button" onclick="logout()" class="secondary" style="margin-top: 5px;">Abmelden</button>
+                </form>
             </div>
         </div>
     </div>
@@ -700,8 +639,6 @@
     <script>
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdmOwK3MeR__gaScFtslQO0jfHoJhi4nzISR2l26CmSMQKCh8BxQ0gcmMq7izQiq0rng/exec';
         
-        let currentEditName = '';
-        let currentEditPasswordHash = '';
         let loggedInUser = null;
         let loggedInPasswordHash = null;
         let pendingPasswordSetUser = null;
@@ -711,8 +648,9 @@
         let freigeschaltet = false;
         let statusGeladen = false;
         let historieData = [];
+        let hasExistingOrder = false;
         
-        const EMPTY_PASSWORD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'; // SHA-256 von ""
+        const EMPTY_PASSWORD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
         
         function getBerlinTime() {
             return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
@@ -782,6 +720,7 @@
             loggedInUser = null;
             loggedInPasswordHash = null;
             pendingPasswordSetUser = null;
+            hasExistingOrder = false;
             document.getElementById('order-form-container').classList.add('hidden');
             document.getElementById('password-set-container').classList.add('hidden');
             document.getElementById('auth-form-container').classList.remove('hidden');
@@ -789,6 +728,7 @@
             document.getElementById('auth-form').reset();
             document.getElementById('wuerste').value = 0;
             document.getElementById('brezn').value = 0;
+            document.getElementById('order-submit-btn').textContent = 'Bestellung absenden';
         }
         
         function istEventGeschlossen() {
@@ -1064,21 +1004,6 @@
             return hashHex;
         }
         
-        function showTab(tab) {
-            if (istEventGeschlossen()) return;
-            
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            
-            if (tab === 'neue') {
-                document.querySelectorAll('.tab')[0].classList.add('active');
-                document.getElementById('tab-neue').classList.add('active');
-            } else {
-                document.querySelectorAll('.tab')[1].classList.add('active');
-                document.getElementById('tab-bearbeiten').classList.add('active');
-            }
-        }
-        
         function showPodiumTab(tab) {
             document.querySelectorAll('.podium-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.podium-container').forEach(t => t.classList.remove('active'));
@@ -1311,6 +1236,30 @@
                 });
         }
         
+        // Lade bestehende Bestellung nach Login
+        function ladeBestehendeBestellung() {
+            if (!loggedInUser || !loggedInPasswordHash) return;
+            
+            fetch(`${APPS_SCRIPT_URL}?action=getMyOrder&name=${encodeURIComponent(loggedInUser)}&hash=${encodeURIComponent(loggedInPasswordHash)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.hasOrder) {
+                        hasExistingOrder = true;
+                        document.getElementById('wuerste').value = data.wuerste || 0;
+                        document.getElementById('brezn').value = data.brezn || 0;
+                        document.getElementById('order-submit-btn').textContent = 'Bestellung aktualisieren';
+                    } else {
+                        hasExistingOrder = false;
+                        document.getElementById('wuerste').value = 0;
+                        document.getElementById('brezn').value = 0;
+                        document.getElementById('order-submit-btn').textContent = 'Bestellung absenden';
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler beim Laden der Bestellung:', e);
+                });
+        }
+        
         document.getElementById('auth-form').addEventListener('submit', async e => {
             e.preventDefault();
             
@@ -1331,7 +1280,6 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        // Prüfe ob Passwort-Reset nötig
                         if (data.requirePasswordReset === 'true') {
                             pendingPasswordSetUser = data.name;
                             document.getElementById('auth-form-container').classList.add('hidden');
@@ -1344,6 +1292,8 @@
                             document.getElementById('auth-form-container').classList.add('hidden');
                             document.getElementById('order-form-container').classList.remove('hidden');
                             document.getElementById('auth-form').reset();
+                            
+                            ladeBestehendeBestellung();
                         }
                     } else if (data.error === 'user_not_found') {
                         const registrieren = confirm(`Der Benutzer "${name}" existiert noch nicht.\n\nMöchtest du einen neuen Account anlegen?`);
@@ -1366,6 +1316,8 @@
                                         }, 3000);
                                         
                                         document.getElementById('auth-form').reset();
+                                        
+                                        ladeBestehendeBestellung();
                                     } else {
                                         document.getElementById('error').textContent = regData.message || '✗ Dieser Name ist bereits vergeben!';
                                         document.getElementById('error').style.display = 'block';
@@ -1446,6 +1398,8 @@
                         }, 3000);
                         
                         pendingPasswordSetUser = null;
+                        
+                        ladeBestehendeBestellung();
                     } else {
                         document.getElementById('error').textContent = '✗ Fehler beim Speichern!';
                         document.getElementById('error').style.display = 'block';
@@ -1482,12 +1436,18 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        document.getElementById('success').textContent = '✓ Bestellung erfolgreich!';
+                        if (data.updated) {
+                            document.getElementById('success').textContent = '✓ Bestellung aktualisiert!';
+                            document.getElementById('order-submit-btn').textContent = 'Bestellung aktualisieren';
+                        } else {
+                            document.getElementById('success').textContent = '✓ Bestellung erstellt!';
+                            document.getElementById('order-submit-btn').textContent = 'Bestellung aktualisieren';
+                        }
+                        
                         document.getElementById('success').style.display = 'block';
                         document.getElementById('error').style.display = 'none';
-                        document.getElementById('order-form').reset();
-                        document.getElementById('wuerste').value = 0;
-                        document.getElementById('brezn').value = 0;
+                        
+                        hasExistingOrder = true;
                         
                         setTimeout(() => {
                             document.getElementById('success').style.display = 'none';
@@ -1505,7 +1465,7 @@
                 })
                 .finally(() => {
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'Bestellung absenden';
+                    submitBtn.textContent = hasExistingOrder ? 'Bestellung aktualisieren' : 'Bestellung absenden';
                 });
         });
         
@@ -1703,100 +1663,6 @@
                 .catch(e => {
                     console.error('Fehler:', e);
                     document.getElementById('admin-error').style.display = 'block';
-                });
-        }
-        
-        document.getElementById('edit-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            
-            if (istEventGeschlossen()) {
-                alert('Event wurde geschlossen!');
-                return;
-            }
-            
-            const name = document.getElementById('edit-name').value;
-            const passwort = document.getElementById('edit-passwort').value || '';
-            const passwortHash = await hashPassword(passwort);
-            
-            fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (!data.success) {
-                        document.getElementById('edit-error').textContent = data.message || '✗ Name oder Passwort falsch!';
-                        document.getElementById('edit-error').style.display = 'block';
-                        document.getElementById('edit-data').style.display = 'none';
-                        return;
-                    }
-                    
-                    if (data.requirePasswordReset === 'true') {
-                        document.getElementById('edit-error').textContent = '✗ Bitte setze erst ein Passwort über "Neue Bestellung"!';
-                        document.getElementById('edit-error').style.display = 'block';
-                        document.getElementById('edit-data').style.display = 'none';
-                        return;
-                    }
-                    
-                    currentEditName = data.name;
-                    currentEditPasswordHash = passwortHash;
-                    
-                    return fetch(APPS_SCRIPT_URL);
-                })
-                .then(r => r ? r.json() : null)
-                .then(bestellungen => {
-                    if (!bestellungen) return;
-                    
-                    const bestellung = bestellungen.find(item => item.Name && item.Name.toLowerCase() === currentEditName.toLowerCase());
-                    
-                    if (bestellung) {
-                        document.getElementById('edit-wuerste').value = bestellung.Wuerste || 0;
-                        document.getElementById('edit-brezn').value = bestellung.Brezn || 0;
-                        document.getElementById('edit-data').style.display = 'block';
-                        document.getElementById('edit-success').style.display = 'none';
-                        document.getElementById('edit-error').style.display = 'none';
-                    } else {
-                        document.getElementById('edit-error').textContent = '✗ Keine Bestellung gefunden!';
-                        document.getElementById('edit-error').style.display = 'block';
-                        document.getElementById('edit-data').style.display = 'none';
-                    }
-                })
-                .catch(e => {
-                    console.error('Fehler:', e);
-                    document.getElementById('edit-error').textContent = '✗ Verbindungsfehler!';
-                    document.getElementById('edit-error').style.display = 'block';
-                    document.getElementById('edit-data').style.display = 'none';
-                });
-        });
-        
-        function updateOrder() {
-            if (istEventGeschlossen()) {
-                alert('Event wurde geschlossen!');
-                return;
-            }
-            
-            const newWuerste = document.getElementById('edit-wuerste').value;
-            const newBrezn = document.getElementById('edit-brezn').value;
-            
-            fetch(`${APPS_SCRIPT_URL}?action=update&name=${encodeURIComponent(currentEditName)}&hash=${encodeURIComponent(currentEditPasswordHash)}&wuerste=${newWuerste}&brezn=${newBrezn}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('edit-success').style.display = 'block';
-                        document.getElementById('edit-error').style.display = 'none';
-                        
-                        setTimeout(() => {
-                            document.getElementById('edit-success').style.display = 'none';
-                            document.getElementById('edit-data').style.display = 'none';
-                            document.getElementById('edit-form').reset();
-                            laden();
-                        }, 2000);
-                    } else {
-                        document.getElementById('edit-error').textContent = '✗ Fehler beim Aktualisieren!';
-                        document.getElementById('edit-error').style.display = 'block';
-                    }
-                })
-                .catch(e => {
-                    console.error('Update Fehler:', e);
-                    document.getElementById('edit-error').textContent = '✗ Verbindungsfehler!';
-                    document.getElementById('edit-error').style.display = 'block';
                 });
         }
         
