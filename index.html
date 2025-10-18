@@ -1658,19 +1658,31 @@
                     let html = '';
                     let summeW = 0;
                     let summeB = 0;
-                    let summeGeld = 0;
+                    let summeGeldW = 0;
+                    let summeGeldB = 0;
                     
                     if (data && data.length > 0) {
                         data.forEach(d => {
                             const w = parseInt(d.Wuerste) || 0;
                             const b = parseInt(d.Brezn) || 0;
-                            const pW = parseFloat(d.PreisWurst) || 0;
-                            const pB = parseFloat(d.PreisBreze) || 0;
+                            
+                            // Preise sicher als Float parsen
+                            let pW = 0;
+                            let pB = 0;
+                            
+                            if (d.PreisWurst !== undefined && d.PreisWurst !== null && d.PreisWurst !== '') {
+                                pW = parseFloat(String(d.PreisWurst).replace(',', '.')) || 0;
+                            }
+                            if (d.PreisBreze !== undefined && d.PreisBreze !== null && d.PreisBreze !== '') {
+                                pB = parseFloat(String(d.PreisBreze).replace(',', '.')) || 0;
+                            }
+                            
                             const gesamt = (w * pW) + (b * pB);
                             
                             summeW += w;
                             summeB += b;
-                            summeGeld += gesamt;
+                            summeGeldW += (w * pW);
+                            summeGeldB += (b * pB);
                             
                             const wurstText = pluralize(w, 'Wurst', 'Würste');
                             html += `<div class="order">
@@ -1684,8 +1696,9 @@
                     
                     document.getElementById('liste').innerHTML = html;
                     const wurstSummeText = pluralize(summeW, 'Wurst', 'Würste');
+                    const gesamtGeld = summeGeldW + summeGeldB;
                     document.getElementById('summe').innerHTML = 
-                        `🥖 ${summeW} ${wurstSummeText} | 🥨 ${summeB} Brezn | 💶 ${formatPrice(summeGeld)} €`;
+                        `🥖 ${summeW} ${wurstSummeText} (${formatPrice(summeGeldW)} €) | 🥨 ${summeB} Brezn (${formatPrice(summeGeldB)} €) | 💶 ${formatPrice(gesamtGeld)} €`;
                 })
                 .catch(e => {
                     console.error('Fehler beim Laden:', e);
@@ -1752,8 +1765,18 @@
                         events.forEach(event => {
                             const w = parseInt(event.Wuerste) || 0;
                             const b = parseInt(event.Brezn) || 0;
-                            const pW = parseFloat(event.PreisWurst) || 0;
-                            const pB = parseFloat(event.PreisBreze) || 0;
+                            
+                            // Preise sicher als Float parsen
+                            let pW = 0;
+                            let pB = 0;
+                            
+                            if (event.PreisWurst !== undefined && event.PreisWurst !== null && event.PreisWurst !== '') {
+                                pW = parseFloat(String(event.PreisWurst).replace(',', '.')) || 0;
+                            }
+                            if (event.PreisBreze !== undefined && event.PreisBreze !== null && event.PreisBreze !== '') {
+                                pB = parseFloat(String(event.PreisBreze).replace(',', '.')) || 0;
+                            }
+                            
                             const gesamt = (w * pW) + (b * pB);
                             
                             summeW += w;
