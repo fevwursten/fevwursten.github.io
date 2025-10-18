@@ -1651,61 +1651,80 @@
                 });
         });
         
-        function laden() {
-            fetch(APPS_SCRIPT_URL)
-                .then(r => r.json())
-                .then(data => {
-                    let html = '';
-                    let summeW = 0;
-                    let summeB = 0;
-                    let summeGeldW = 0;
-                    let summeGeldB = 0;
+function laden() {
+    fetch(APPS_SCRIPT_URL)
+        .then(r => r.json())
+        .then(data => {
+            let html = '';
+            let summeW = 0;
+            let summeB = 0;
+            let summeGeldW = 0;
+            let summeGeldB = 0;
+            
+            if (data && data.length > 0) {
+                data.forEach(d => {
+                    const w = parseInt(d.Wuerste) || 0;
+                    const b = parseInt(d.Brezn) || 0;
                     
-                    if (data && data.length > 0) {
-                        data.forEach(d => {
-                            const w = parseInt(d.Wuerste) || 0;
-                            const b = parseInt(d.Brezn) || 0;
-                            
-                            // Preise sicher als Float parsen
-                            let pW = 0;
-                            let pB = 0;
-                            
-                            if (d.PreisWurst !== undefined && d.PreisWurst !== null && d.PreisWurst !== '') {
-                                pW = parseFloat(String(d.PreisWurst).replace(',', '.')) || 0;
-                            }
-                            if (d.PreisBreze !== undefined && d.PreisBreze !== null && d.PreisBreze !== '') {
-                                pB = parseFloat(String(d.PreisBreze).replace(',', '.')) || 0;
-                            }
-                            
-                            const gesamt = (w * pW) + (b * pB);
-                            
-                            summeW += w;
-                            summeB += b;
-                            summeGeldW += (w * pW);
-                            summeGeldB += (b * pB);
-                            
-                            const wurstText = pluralize(w, 'Wurst', 'Würste');
-                            html += `<div class="order">
-                                <b>${d.Name || 'Unbekannt'}</b>: ${w} ${wurstText}, ${b} Brezn
-                                <div class="order-price">Gesamt: ${formatPrice(gesamt)} €</div>
-                            </div>`;
-                        });
-                    } else {
-                        html = '<p>Noch keine Bestellungen</p>';
+                    // Preise SUPER-robust parsen
+                    let pW = 0;
+                    let pB = 0;
+                    
+                    try {
+                        if (d.PreisWurst !== undefined && d.PreisWurst !== null && d.PreisWurst !== '') {
+                            // Alles zu String, dann Komma zu Punkt, dann parseFloat
+                            const pwStr = String(d.PreisWurst).trim().replace(',', '.');
+                            pW = parseFloat(pwStr);
+                            if (isNaN(pW)) pW = 0;
+                        }
+                    } catch(e) {
+                        console.error('Fehler PreisWurst:', d.PreisWurst, e);
+                        pW = 0;
                     }
                     
-                    document.getElementById('liste').innerHTML = html;
-                    const wurstSummeText = pluralize(summeW, 'Wurst', 'Würste');
-                    const gesamtGeld = summeGeldW + summeGeldB;
-                    document.getElementById('summe').innerHTML = 
-                        `🥖 ${summeW} ${wurstSummeText} (${formatPrice(summeGeldW)} €) | 🥨 ${summeB} Brezn (${formatPrice(summeGeldB)} €) | 💶 ${formatPrice(gesamtGeld)} €`;
-                })
-                .catch(e => {
-                    console.error('Fehler beim Laden:', e);
-                    document.getElementById('liste').innerHTML = 
-                        '<p style="color:red;">Fehler beim Laden!</p>';
+                    try {
+                        if (d.PreisBreze !== undefined && d.PreisBreze !== null && d.PreisBreze !== '') {
+                            const pbStr = String(d.PreisBreze).trim().replace(',', '.');
+                            pB = parseFloat(pbStr);
+                            if (isNaN(pB)) pB = 0;
+                        }
+                    } catch(e) {
+                        console.error('Fehler PreisBreze:', d.PreisBreze, e);
+                        pB = 0;
+                    }
+                    
+                    console.log(`${d.Name}: w=${w}, b=${b}, pW=${pW}, pB=${pB}`); // DEBUG
+                    
+                    const gesamt = (w * pW) + (b * pB);
+                    
+                    summeW += w;
+                    summeB += b;
+                    summeGeldW += (w * pW);
+                    summeGeldB += (b * pB);
+                    
+                    const wurstText = pluralize(w, 'Wurst', 'Würste');
+                    html += `<div class="order">
+                        <b>${d.Name || 'Unbekannt'}</b>: ${w} ${wurstText}, ${b} Brezn
+                        <div class="order-price">Gesamt: ${formatPrice(gesamt)} €</div>
+                    </div>`;
                 });
-        }
+            } else {
+                html = '<p>Noch keine Bestellungen</p>';
+            }
+            
+            document.getElementById('liste').innerHTML = html;
+            const wurstSummeText = pluralize(summeW, 'Wurst', 'Würste');
+            const gesamtGeld = summeGeldW + summeGeldB;
+            document.getElementById('summe').innerHTML = 
+                `🥖 ${summeW} ${wurstSummeText} (${formatPrice(summeGeldW)} €) | 🥨 ${summeB} Brezn (${formatPrice(summeGeldB)} €) | 💶 ${formatPrice(gesamtGeld)} €`;
+        })
+        .catch(e => {
+            console.error('Fehler beim Laden:', e);
+            document.getElementById('liste').innerHTML = 
+                '<p style="color:red;">Fehler beim Laden!</p>';
+        });
+}
+
         
         function ladeHistorie() {
             fetch(`${APPS_SCRIPT_URL}?type=historie`)
@@ -1923,3 +1942,4 @@
     </script>
 </body>
 </html>
+
