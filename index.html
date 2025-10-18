@@ -474,14 +474,14 @@
             <!-- Einheitliches Login/Register Form -->
             <div id="auth-form-container">
                 <h3>Anmelden</h3>
-                <p class="help-text">Gib deinen Namen ein. Das Passwort ist optional - lasse es leer für schnellen Zugang.</p>
+                <p class="help-text">Gib deinen Namen und optional ein Passwort ein.</p>
                 
                 <form id="auth-form">
                     <label>Name: *</label>
                     <input type="text" id="auth-name" required placeholder="Max Mustermann" autocomplete="username">
                     
                     <label>Passwort: (optional)</label>
-                    <input type="password" id="auth-passwort" placeholder="Optional - leer lassen für schnellen Zugang" autocomplete="current-password">
+                    <input type="password" id="auth-passwort" placeholder="" autocomplete="current-password">
                     
                     <button type="submit">Weiter</button>
                 </form>
@@ -1268,8 +1268,8 @@
                 return;
             }
             
-            const name = document.getElementById('auth-name').value;
-            const passwort = document.getElementById('auth-passwort').value || '';
+            const name = document.getElementById('auth-name').value.trim();
+            const passwort = (document.getElementById('auth-passwort').value || '').trim();
             const passwortHash = await hashPassword(passwort);
             
             const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -1366,8 +1366,8 @@
         document.getElementById('password-set-form').addEventListener('submit', async e => {
             e.preventDefault();
             
-            const pw1 = document.getElementById('new-password').value;
-            const pw2 = document.getElementById('new-password-confirm').value;
+            const pw1 = document.getElementById('new-password').value.trim();
+            const pw2 = document.getElementById('new-password-confirm').value.trim();
             
             if (pw1 !== pw2) {
                 document.getElementById('error').textContent = '✗ Passwörter stimmen nicht überein!';
