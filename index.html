@@ -739,27 +739,34 @@
                 `<strong>Gesamt: ${formatPrice(gesamt)} €</strong>`;
         }
         
-        function ladePreise() {
-            fetch(`${APPS_SCRIPT_URL}?type=preise`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        currentPreisWurst = data.preisWurst;
-                        currentPreisBreze = data.preisBreze;
-                        
-                        document.getElementById('display-preis-wurst').textContent = formatPrice(currentPreisWurst);
-                        document.getElementById('display-preis-breze').textContent = formatPrice(currentPreisBreze);
-                        
-                        document.getElementById('admin-preis-wurst').value = currentPreisWurst.toFixed(2);
-                        document.getElementById('admin-preis-breze').value = currentPreisBreze.toFixed(2);
-                        
-                        updateOrderPreview();
-                    }
-                })
-                .catch(e => {
-                    console.error('Fehler beim Laden der Preise:', e);
-                });
-        }
+function ladePreise() {
+    fetch(`${APPS_SCRIPT_URL}?type=preise`)
+        .then(r => r.json())
+        .then(data => {
+            console.log('Raw data:', data); // NEU
+            console.log('Geladene Preise:', data.preisWurst, data.preisBreze); // NEU
+            
+            if (data.success) {
+                currentPreisWurst = data.preisWurst;
+                currentPreisBreze = data.preisBreze;
+                
+                console.log('currentPreisWurst:', currentPreisWurst); // NEU
+                console.log('currentPreisBreze:', currentPreisBreze); // NEU
+                
+                document.getElementById('display-preis-wurst').textContent = formatPrice(currentPreisWurst);
+                document.getElementById('display-preis-breze').textContent = formatPrice(currentPreisBreze);
+                
+                document.getElementById('admin-preis-wurst').value = currentPreisWurst.toFixed(2);
+                document.getElementById('admin-preis-breze').value = currentPreisBreze.toFixed(2);
+                
+                updateOrderPreview();
+            }
+        })
+        .catch(e => {
+            console.error('Fehler beim Laden der Preise:', e);
+        });
+}
+
         
 function speicherePreise() {
     const password = document.getElementById('admin-password').value;
@@ -1953,5 +1960,6 @@ function laden() {
     </script>
 </body>
 </html>
+
 
 
