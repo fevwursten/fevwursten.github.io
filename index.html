@@ -422,6 +422,50 @@
             padding: 40px;
             font-size: 16px;
         }
+        
+        /* User Management Styles */
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 15px 0;
+        }
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #b9052d;
+        }
+        .user-name {
+            font-weight: bold;
+            flex: 1;
+        }
+        .user-status {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .status-locked {
+            background: #dd0036;
+            color: white;
+        }
+        .status-unlocked {
+            background: #adc646;
+            color: white;
+        }
+        .user-btn {
+            padding: 5px 15px;
+            font-size: 12px;
+            width: auto;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -461,16 +505,32 @@
                 <!-- Einheitliches Login/Register Form -->
                 <div id="auth-form-container">
                     <h3>Anmelden</h3>
-                    <p class="help-text">Gib deinen Namen und Passwort ein. Existiert der Name noch nicht, kannst du einen neuen Account anlegen.</p>
+                    <p class="help-text">Gib deinen Namen ein. Das Passwort ist optional - lasse es leer für schnellen Zugang.</p>
                     
                     <form id="auth-form">
                         <label>Name: *</label>
                         <input type="text" id="auth-name" required placeholder="Max Mustermann" autocomplete="username">
                         
-                        <label>Passwort: *</label>
-                        <input type="password" id="auth-passwort" required placeholder="Mindestens 4 Zeichen" minlength="4" autocomplete="current-password">
+                        <label>Passwort: (optional)</label>
+                        <input type="password" id="auth-passwort" placeholder="Optional - leer lassen für schnellen Zugang" autocomplete="current-password">
                         
                         <button type="submit">Weiter</button>
+                    </form>
+                </div>
+                
+                <!-- Passwort-Setz-Dialog -->
+                <div id="password-set-container" class="hidden">
+                    <h3>Passwort setzen</h3>
+                    <p class="help-text">Der Admin hat angefordert, dass du ein Passwort setzt.</p>
+                    
+                    <form id="password-set-form">
+                        <label>Neues Passwort: *</label>
+                        <input type="password" id="new-password" required placeholder="Mindestens 4 Zeichen" minlength="4">
+                        
+                        <label>Passwort wiederholen: *</label>
+                        <input type="password" id="new-password-confirm" required placeholder="Passwort bestätigen" minlength="4">
+                        
+                        <button type="submit">Passwort speichern</button>
                     </form>
                 </div>
                 
@@ -501,8 +561,8 @@
                     <label>Dein Name: *</label>
                     <input type="text" id="edit-name" required placeholder="Max Mustermann" autocomplete="username">
                     
-                    <label>Dein Passwort: *</label>
-                    <input type="password" id="edit-passwort" required placeholder="Dein Passwort" autocomplete="current-password">
+                    <label>Dein Passwort:</label>
+                    <input type="password" id="edit-passwort" placeholder="Nur wenn gesetzt" autocomplete="current-password">
                     
                     <button type="submit" class="edit">Bestellung laden</button>
                 </form>
@@ -600,13 +660,23 @@
                 <button onclick="archivieren()" class="admin">Event vorzeitig abschließen</button>
                 <button onclick="zeigeAusserplanmaessigModal()" class="admin-success" id="btn-ausserplanmaessig">🎉 Neues außerplanmäßiges Event starten</button>
                 <button onclick="freischalten()" class="admin-success" id="btn-freischalten">🔓 Kommendes Freitagsevent freischalten</button>
+                <button onclick="ladeBenutzerListe()" class="admin">👥 Benutzerverwaltung</button>
+            </div>
+            
+            <div id="user-management" class="hidden" style="margin-top: 20px;">
+                <h4>Benutzerverwaltung</h4>
+                <p class="help-text">Entsperre Benutzer, damit sie beim nächsten Login ein Passwort setzen müssen.</p>
+                <div id="user-list" class="user-list">
+                    <div class="no-data">Lade Benutzer...</div>
+                </div>
             </div>
             
             <p style="font-size: 12px; color: #666; margin-top: 15px;">
                 <strong>Hinweis:</strong><br>
                 • "Abschließen" = Archiviert aktuelle Bestellungen, sperrt bis Montag<br>
                 • "Außerplanmäßig" = Startet neues Event mit wählbarem Datum<br>
-                • "Freischalten" = Öffnet Freitagsevent vorzeitig (z.B. schon am Montag)
+                • "Freischalten" = Öffnet Freitagsevent vorzeitig<br>
+                • "Benutzerverwaltung" = Nutzer entsperren für Passwort-Vergabe
             </p>
         </div>
     </div>
@@ -634,12 +704,15 @@
         let currentEditPasswordHash = '';
         let loggedInUser = null;
         let loggedInPasswordHash = null;
+        let pendingPasswordSetUser = null;
         let countdownInterval = null;
         let archivierungsDatum = null;
         let ausserplanmaessigDeadline = null;
         let freigeschaltet = false;
         let statusGeladen = false;
         let historieData = [];
+        
+        const EMPTY_PASSWORD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'; // SHA-256 von ""
         
         function getBerlinTime() {
             return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
@@ -708,7 +781,9 @@
         function logout() {
             loggedInUser = null;
             loggedInPasswordHash = null;
+            pendingPasswordSetUser = null;
             document.getElementById('order-form-container').classList.add('hidden');
+            document.getElementById('password-set-container').classList.add('hidden');
             document.getElementById('auth-form-container').classList.remove('hidden');
             document.getElementById('order-form').reset();
             document.getElementById('auth-form').reset();
@@ -1054,7 +1129,6 @@
         function berechneBestenliste() {
             if (!historieData || historieData.length === 0) return;
             
-            // All-Time Berechnung
             const allTimeWuerste = {};
             const allTimeBrezn = {};
             
@@ -1067,7 +1141,6 @@
                 allTimeBrezn[name] = (allTimeBrezn[name] || 0) + brezn;
             });
             
-            // Sortiere und erstelle Top 3
             const top3Wuerste = Object.entries(allTimeWuerste)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 3)
@@ -1081,7 +1154,6 @@
             createPodium(top3Wuerste, 'podium-wuerste-alltime', 'wuerste');
             createPodium(top3Brezn, 'podium-brezn-alltime', 'brezn');
             
-            // Jahre extrahieren für Dropdown
             const years = new Set();
             historieData.forEach(item => {
                 let datum = item.Datum;
@@ -1155,6 +1227,90 @@
             createPodium(top3Brezn, 'podium-brezn-year', 'brezn');
         }
         
+        function ladeBenutzerListe() {
+            const password = document.getElementById('admin-password').value;
+            
+            if (!password) {
+                alert('Bitte Admin-Passwort eingeben!');
+                return;
+            }
+            
+            const userManagement = document.getElementById('user-management');
+            if (!userManagement.classList.contains('hidden')) {
+                userManagement.classList.add('hidden');
+                return;
+            }
+            
+            fetch(`${APPS_SCRIPT_URL}?action=listUsers&adminPassword=${encodeURIComponent(password)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) {
+                        document.getElementById('admin-error').textContent = '✗ ' + (data.message || 'Fehler beim Laden');
+                        document.getElementById('admin-error').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('admin-error').style.display = 'none';
+                        }, 3000);
+                        return;
+                    }
+                    
+                    const users = data.users || [];
+                    const userList = document.getElementById('user-list');
+                    
+                    if (users.length === 0) {
+                        userList.innerHTML = '<div class="no-data">Keine Benutzer vorhanden</div>';
+                    } else {
+                        userList.innerHTML = users.map(user => {
+                            const isLocked = user.requirePasswordReset === 'true';
+                            const statusClass = isLocked ? 'status-locked' : 'status-unlocked';
+                            const statusText = isLocked ? 'Muss PW setzen' : 'Normal';
+                            const btnText = isLocked ? 'Sperren aufheben' : 'PW-Pflicht aktivieren';
+                            
+                            return `
+                                <div class="user-item">
+                                    <span class="user-name">${user.name}</span>
+                                    <span class="user-status ${statusClass}">${statusText}</span>
+                                    <button class="user-btn" onclick="toggleUserLock('${user.name.replace(/'/g, "\\'")}', ${!isLocked})">${btnText}</button>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                    
+                    userManagement.classList.remove('hidden');
+                })
+                .catch(e => {
+                    console.error('Fehler:', e);
+                    document.getElementById('admin-error').textContent = '✗ Verbindungsfehler!';
+                    document.getElementById('admin-error').style.display = 'block';
+                });
+        }
+        
+        function toggleUserLock(userName, setLock) {
+            const password = document.getElementById('admin-password').value;
+            
+            const action = setLock ? 'lockUser' : 'unlockUser';
+            
+            fetch(`${APPS_SCRIPT_URL}?action=${action}&adminPassword=${encodeURIComponent(password)}&userName=${encodeURIComponent(userName)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('admin-success').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('admin-success').style.display = 'none';
+                        }, 2000);
+                        ladeBenutzerListe();
+                    } else {
+                        document.getElementById('admin-error').textContent = '✗ ' + (data.message || 'Fehler');
+                        document.getElementById('admin-error').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('admin-error').style.display = 'none';
+                        }, 3000);
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler:', e);
+                });
+        }
+        
         document.getElementById('auth-form').addEventListener('submit', async e => {
             e.preventDefault();
             
@@ -1164,7 +1320,7 @@
             }
             
             const name = document.getElementById('auth-name').value;
-            const passwort = document.getElementById('auth-passwort').value;
+            const passwort = document.getElementById('auth-passwort').value || '';
             const passwortHash = await hashPassword(passwort);
             
             const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -1175,12 +1331,20 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        loggedInUser = data.name;
-                        loggedInPasswordHash = passwortHash;
-                        document.getElementById('logged-in-user').textContent = data.name;
-                        document.getElementById('auth-form-container').classList.add('hidden');
-                        document.getElementById('order-form-container').classList.remove('hidden');
-                        document.getElementById('auth-form').reset();
+                        // Prüfe ob Passwort-Reset nötig
+                        if (data.requirePasswordReset === 'true') {
+                            pendingPasswordSetUser = data.name;
+                            document.getElementById('auth-form-container').classList.add('hidden');
+                            document.getElementById('password-set-container').classList.remove('hidden');
+                            document.getElementById('auth-form').reset();
+                        } else {
+                            loggedInUser = data.name;
+                            loggedInPasswordHash = passwortHash;
+                            document.getElementById('logged-in-user').textContent = data.name;
+                            document.getElementById('auth-form-container').classList.add('hidden');
+                            document.getElementById('order-form-container').classList.remove('hidden');
+                            document.getElementById('auth-form').reset();
+                        }
                     } else if (data.error === 'user_not_found') {
                         const registrieren = confirm(`Der Benutzer "${name}" existiert noch nicht.\n\nMöchtest du einen neuen Account anlegen?`);
                         
@@ -1244,6 +1408,53 @@
                 .finally(() => {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Weiter';
+                });
+        });
+        
+        document.getElementById('password-set-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            
+            const pw1 = document.getElementById('new-password').value;
+            const pw2 = document.getElementById('new-password-confirm').value;
+            
+            if (pw1 !== pw2) {
+                document.getElementById('error').textContent = '✗ Passwörter stimmen nicht überein!';
+                document.getElementById('error').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('error').style.display = 'none';
+                }, 3000);
+                return;
+            }
+            
+            const newHash = await hashPassword(pw1);
+            
+            fetch(`${APPS_SCRIPT_URL}?action=setPassword&name=${encodeURIComponent(pendingPasswordSetUser)}&hash=${encodeURIComponent(newHash)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        loggedInUser = pendingPasswordSetUser;
+                        loggedInPasswordHash = newHash;
+                        document.getElementById('logged-in-user').textContent = pendingPasswordSetUser;
+                        document.getElementById('password-set-container').classList.add('hidden');
+                        document.getElementById('order-form-container').classList.remove('hidden');
+                        document.getElementById('password-set-form').reset();
+                        
+                        document.getElementById('success').textContent = '✓ Passwort gesetzt!';
+                        document.getElementById('success').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('success').style.display = 'none';
+                        }, 3000);
+                        
+                        pendingPasswordSetUser = null;
+                    } else {
+                        document.getElementById('error').textContent = '✗ Fehler beim Speichern!';
+                        document.getElementById('error').style.display = 'block';
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler:', e);
+                    document.getElementById('error').textContent = '✗ Verbindungsfehler!';
+                    document.getElementById('error').style.display = 'block';
                 });
         });
         
@@ -1341,7 +1552,6 @@
                         return;
                     }
                     
-                    // Berechne Bestenliste
                     berechneBestenliste();
                     
                     const grouped = {};
@@ -1505,7 +1715,7 @@
             }
             
             const name = document.getElementById('edit-name').value;
-            const passwort = document.getElementById('edit-passwort').value;
+            const passwort = document.getElementById('edit-passwort').value || '';
             const passwortHash = await hashPassword(passwort);
             
             fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`)
@@ -1513,6 +1723,13 @@
                 .then(data => {
                     if (!data.success) {
                         document.getElementById('edit-error').textContent = data.message || '✗ Name oder Passwort falsch!';
+                        document.getElementById('edit-error').style.display = 'block';
+                        document.getElementById('edit-data').style.display = 'none';
+                        return;
+                    }
+                    
+                    if (data.requirePasswordReset === 'true') {
+                        document.getElementById('edit-error').textContent = '✗ Bitte setze erst ein Passwort über "Neue Bestellung"!';
                         document.getElementById('edit-error').style.display = 'block';
                         document.getElementById('edit-data').style.display = 'none';
                         return;
