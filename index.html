@@ -761,45 +761,56 @@
                 });
         }
         
-        function speicherePreise() {
-            const password = document.getElementById('admin-password').value;
-            
-            if (!password) {
-                alert('Bitte Admin-Passwort eingeben!');
-                return;
+function speicherePreise() {
+    const password = document.getElementById('admin-password').value;
+    
+    if (!password) {
+        alert('Bitte Admin-Passwort eingeben!');
+        return;
+    }
+    
+    let preisWurst = document.getElementById('admin-preis-wurst').value;
+    let preisBreze = document.getElementById('admin-preis-breze').value;
+    
+    if (!preisWurst || !preisBreze) {
+        alert('Bitte beide Preise eingeben!');
+        return;
+    }
+    
+    // Komma zu Punkt konvertieren für beide Preise
+    preisWurst = preisWurst.replace(',', '.');
+    preisBreze = preisBreze.replace(',', '.');
+    
+    // Validiere dass es Zahlen sind
+    if (isNaN(parseFloat(preisWurst)) || isNaN(parseFloat(preisBreze))) {
+        alert('Bitte gültige Preise eingeben!');
+        return;
+    }
+    
+    fetch(`${APPS_SCRIPT_URL}?action=setPreise&adminPassword=${encodeURIComponent(password)}&preisWurst=${preisWurst}&preisBreze=${preisBreze}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('admin-success').textContent = '✓ Preise aktualisiert!';
+                document.getElementById('admin-success').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('admin-success').style.display = 'none';
+                }, 3000);
+                
+                ladePreise();
+            } else {
+                document.getElementById('admin-error').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('admin-error').style.display = 'none';
+                }, 5000);
             }
-            
-            const preisWurst = document.getElementById('admin-preis-wurst').value;
-            const preisBreze = document.getElementById('admin-preis-breze').value;
-            
-            if (!preisWurst || !preisBreze) {
-                alert('Bitte beide Preise eingeben!');
-                return;
-            }
-            
-            fetch(`${APPS_SCRIPT_URL}?action=setPreise&adminPassword=${encodeURIComponent(password)}&preisWurst=${preisWurst}&preisBreze=${preisBreze}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('admin-success').textContent = '✓ Preise aktualisiert!';
-                        document.getElementById('admin-success').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('admin-success').style.display = 'none';
-                        }, 3000);
-                        
-                        ladePreise();
-                    } else {
-                        document.getElementById('admin-error').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('admin-error').style.display = 'none';
-                        }, 5000);
-                    }
-                })
-                .catch(e => {
-                    console.error('Fehler:', e);
-                    document.getElementById('admin-error').style.display = 'block';
-                });
-        }
+        })
+        .catch(e => {
+            console.error('Fehler:', e);
+            document.getElementById('admin-error').style.display = 'block';
+        });
+}
+
         
         function getAktuellerFreitagZeitraum() {
             const jetzt = getBerlinTime();
@@ -1942,4 +1953,5 @@ function laden() {
     </script>
 </body>
 </html>
+
 
