@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weißwurstfrühstück</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #6e031b 0%, #931177 100%);
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        input, button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #b9052d;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #dd0036;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #999 !important;
+        }
+        button.edit {
+            background: #0087a0;
+        }
+        button.edit:hover {
+            background: #0087a0;
+            filter: brightness(1.1);
+        }
+        button.admin {
+            background: #e67319;
+        }
+        button.admin:hover {
+            background: #e67319;
+            filter: brightness(1.1);
+        }
+        button.admin-success {
+            background: #931177;
+        }
+        button.admin-success:hover {
+            background: #931177;
+            filter: brightness(1.1);
+        }
+        button.secondary {
+            background: #6e031b;
+        }
+        button.secondary:hover {
+            background: #931177;
+        }
+        .order {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #b9052d;
+            border-radius: 5px;
+        }
+        .success {
+            background: #adc646;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            display: none;
+            border-radius: 8px;
+        }
+        .error {
+            background: #dd0036;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            display: none;
+            border-radius: 8px;
+        }
+        .warning {
+            background: #e67319;
+            color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .info-badge {
+            background: #931177;
+            color: white;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #6e031b;
+        }
+        h3 {
+            color: #6e031b;
+            margin-top: 20px;
+        }
+        .date-subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 16px;
+            margin: -10px 0 20px 0;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: #e0e0e0;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .tab.active {
+            background: #b9052d;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .countdown-box {
+            background: linear-gradient(135deg, #6e031b 0%, #b9052d 100%);
+            color: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .countdown-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        .countdown {
+            font-size: 36px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+        .countdown-expired {
+            background: linear-gradient(135deg, #dd0036 0%, #b9052d 100%);
+        }
+        .countdown-special {
+            background: linear-gradient(135deg, #931177 0%, #450993 100%);
+        }
+        .deadline-info {
+            background: #e8f4f8;
+            border-left: 4px solid #0087a0;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            color: #171a51;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .admin-section {
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #e67319;
+        }
+        .admin-buttons {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .historie-event {
+            background: #f5f5f5;
+            padding: 0;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #931177;
+            overflow: hidden;
+        }
+        .historie-header {
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fafafa;
+            transition: background 0.3s;
+        }
+        .historie-header:hover {
+            background: #f0f0f0;
+        }
+        .historie-datum {
+            font-size: 18px;
+            font-weight: bold;
+            color: #931177;
+        }
+        .historie-toggle {
+            font-size: 24px;
+            color: #931177;
+            transition: transform 0.3s;
+        }
+        .historie-toggle.open {
+            transform: rotate(180deg);
+        }
+        .historie-content {
+            display: none;
+            padding: 20px;
+        }
+        .historie-content.open {
+            display: block;
+        }
+        .historie-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 4px;
+        }
+        .historie-stats {
+            background: linear-gradient(135deg, rgba(147, 17, 119, 0.1) 0%, rgba(147, 17, 119, 0.2) 100%);
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+            color: #6e031b;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .modal-buttons button {
+            flex: 1;
+        }
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Siegertreppe Styles */
+        .podium-section {
+            margin: 30px 0;
+        }
+        .podium-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .podium-tab {
+            padding: 10px 20px;
+            background: #e0e0e0;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .podium-tab.active {
+            background: #b9052d;
+            color: white;
+        }
+        .podium-container {
+            display: none;
+        }
+        .podium-container.active {
+            display: block;
+        }
+        .podium-wrapper {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+        .podium-block {
+            flex: 1;
+        }
+        .podium-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #6e031b;
+            margin-bottom: 20px;
+        }
+        .podium {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 10px;
+            height: 250px;
+            margin-top: 20px;
+        }
+        .podium-place {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .podium-person {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .podium-name {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .podium-count {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .podium-step {
+            width: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px 8px 0 0;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+        }
+        .place-1 {
+            order: 2;
+        }
+        .place-1 .podium-step {
+            height: 140px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        }
+        .place-1 .podium-person {
+            font-size: 50px;
+        }
+        .place-2 {
+            order: 1;
+        }
+        .place-2 .podium-step {
+            height: 100px;
+            background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%);
+        }
+        .place-3 {
+            order: 3;
+        }
+        .place-3 .podium-step {
+            height: 70px;
+            background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
+        }
+        .year-selector {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .year-selector select {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 2px solid #b9052d;
+            border-radius: 8px;
+            background: white;
+            color: #6e031b;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .no-data {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🥖 Weißwurstfrühstück 🥨</h1>
+        <div class="date-subtitle" id="datum-titel">Lädt...</div>
+        
+        <div class="info-badge hidden" id="sonder-info">
+            ⭐ Außerplanmäßiges Event aktiv
+        </div>
+        
+        <div class="countdown-box" id="countdown-box">
+            <div class="countdown-title">⏰ Zeit bis Bestellende</div>
+            <div class="countdown" id="countdown">--:--:--</div>
+        </div>
+        
+        <div class="deadline-info">
+            <strong>Anmeldeschluss:</strong> <span id="deadline-text">Freitag, 09:00 Uhr</span> (MEZ/MESZ - Berlin)
+        </div>
+        
+        <div class="warning hidden" id="deadline-warning">
+            ⏰ Anmeldeschluss überschritten!<br>
+            Bitte wende dich direkt an <strong>Andreas</strong>
+        </div>
+        
+        <div id="form-container">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('neue')">Neue Bestellung</button>
+                <button class="tab" onclick="showTab('bearbeiten')">Bestellung ändern</button>
+            </div>
+            
+            <!-- Tab: Neue Bestellung -->
+            <div id="tab-neue" class="tab-content active">
+                <div id="success" class="success">✓ Bestellung erfolgreich!</div>
+                <div id="error" class="error">✗ Fehler beim Senden!</div>
+                
+                <!-- Einheitliches Login/Register Form -->
+                <div id="auth-form-container">
+                    <h3>Anmelden</h3>
+                    <p class="help-text">Gib deinen Namen und Passwort ein. Existiert der Name noch nicht, kannst du einen neuen Account anlegen.</p>
+                    
+                    <form id="auth-form">
+                        <label>Name: *</label>
+                        <input type="text" id="auth-name" required placeholder="Max Mustermann" autocomplete="username">
+                        
+                        <label>Passwort: *</label>
+                        <input type="password" id="auth-passwort" required placeholder="Mindestens 4 Zeichen" minlength="4" autocomplete="current-password">
+                        
+                        <button type="submit">Weiter</button>
+                    </form>
+                </div>
+                
+                <!-- Bestellformular (nach Login) -->
+                <div id="order-form-container" class="hidden">
+                    <h3>Deine Bestellung</h3>
+                    <p class="help-text">Angemeldet als: <strong id="logged-in-user"></strong></p>
+                    
+                    <form id="order-form">
+                        <label>Anzahl Weißwürste: *</label>
+                        <input type="number" id="wuerste" value="0" min="0" max="50" required>
+                        
+                        <label>Anzahl Brezn: *</label>
+                        <input type="number" id="brezn" value="0" min="0" max="50" required>
+                        
+                        <button type="submit">Bestellung absenden</button>
+                        <button type="button" onclick="logout()" class="secondary" style="margin-top: 5px;">Abmelden</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Tab: Bestellung ändern -->
+            <div id="tab-bearbeiten" class="tab-content">
+                <div id="edit-success" class="success">✓ Bestellung aktualisiert!</div>
+                <div id="edit-error" class="error">✗ Fehler: Name oder Passwort falsch!</div>
+                
+                <form id="edit-form">
+                    <label>Dein Name: *</label>
+                    <input type="text" id="edit-name" required placeholder="Max Mustermann" autocomplete="username">
+                    
+                    <label>Dein Passwort: *</label>
+                    <input type="password" id="edit-passwort" required placeholder="Dein Passwort" autocomplete="current-password">
+                    
+                    <button type="submit" class="edit">Bestellung laden</button>
+                </form>
+                
+                <div id="edit-data" style="display:none;">
+                    <hr style="margin: 20px 0; border-color: #e0e0e0;">
+                    <h3>Bestellung ändern:</h3>
+                    
+                    <label>Anzahl Weißwürste: *</label>
+                    <input type="number" id="edit-wuerste" min="0" max="50" required>
+                    
+                    <label>Anzahl Brezn: *</label>
+                    <input type="number" id="edit-brezn" min="0" max="50" required>
+                    
+                    <button onclick="updateOrder()" class="edit">Änderungen speichern</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>📋 Aktuelle Bestellungen</h2>
+        <div id="liste">Lädt...</div>
+        <div id="summe" style="margin-top:20px; font-weight:bold; text-align:center; font-size:18px; color:#6e031b;"></div>
+    </div>
+    
+    <!-- Siegertreppe -->
+    <div class="container">
+        <h2>🏆 Hall of Fame</h2>
+        
+        <div class="podium-tabs">
+            <button class="podium-tab active" onclick="showPodiumTab('alltime')">All-Time Champions</button>
+            <button class="podium-tab" onclick="showPodiumTab('year')">Jahres-Bestenliste</button>
+        </div>
+        
+        <!-- All-Time Podium -->
+        <div id="podium-alltime" class="podium-container active">
+            <div class="podium-wrapper">
+                <div class="podium-block">
+                    <div class="podium-title">🥖 Würste All-Time</div>
+                    <div id="podium-wuerste-alltime" class="podium">
+                        <div class="no-data">Lädt...</div>
+                    </div>
+                </div>
+                <div class="podium-block">
+                    <div class="podium-title">🥨 Brezn All-Time</div>
+                    <div id="podium-brezn-alltime" class="podium">
+                        <div class="no-data">Lädt...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Year Podium -->
+        <div id="podium-year" class="podium-container">
+            <div class="year-selector">
+                <label for="year-select" style="display:inline; margin-right:10px;">Jahr auswählen:</label>
+                <select id="year-select" onchange="updateYearPodium()">
+                    <option value="">Lädt...</option>
+                </select>
+            </div>
+            <div class="podium-wrapper">
+                <div class="podium-block">
+                    <div class="podium-title">🥖 Würste <span id="year-title-wuerste"></span></div>
+                    <div id="podium-wuerste-year" class="podium">
+                        <div class="no-data">Bitte Jahr auswählen</div>
+                    </div>
+                </div>
+                <div class="podium-block">
+                    <div class="podium-title">🥨 Brezn <span id="year-title-brezn"></span></div>
+                    <div id="podium-brezn-year" class="podium">
+                        <div class="no-data">Bitte Jahr auswählen</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>📜 Historie vergangener Events</h2>
+        <div id="historie">Lädt...</div>
+    </div>
+    
+    <div class="container">
+        <div class="admin-section">
+            <h3>🔐 Admin-Bereich</h3>
+            <div id="admin-success" class="success">✓ Aktion erfolgreich!</div>
+            <div id="admin-error" class="error">✗ Falsches Passwort!</div>
+            
+            <form id="admin-form" onsubmit="return false;">
+                <input type="password" id="admin-password" placeholder="Admin-Passwort" autocomplete="current-password" style="margin-top: 10px;">
+            </form>
+            
+            <div class="admin-buttons">
+                <button onclick="archivieren()" class="admin">Event vorzeitig abschließen</button>
+                <button onclick="zeigeAusserplanmaessigModal()" class="admin-success" id="btn-ausserplanmaessig">🎉 Neues außerplanmäßiges Event starten</button>
+                <button onclick="freischalten()" class="admin-success" id="btn-freischalten">🔓 Kommendes Freitagsevent freischalten</button>
+            </div>
+            
+            <p style="font-size: 12px; color: #666; margin-top: 15px;">
+                <strong>Hinweis:</strong><br>
+                • "Abschließen" = Archiviert aktuelle Bestellungen, sperrt bis Montag<br>
+                • "Außerplanmäßig" = Startet neues Event mit wählbarem Datum<br>
+                • "Freischalten" = Öffnet Freitagsevent vorzeitig (z.B. schon am Montag)
+            </p>
+        </div>
+    </div>
+
+    <div id="ausserplanmaessig-modal" class="modal">
+        <div class="modal-content">
+            <h3>🎉 Außerplanmäßiges Event</h3>
+            <p>Wann soll das Event stattfinden?</p>
+            <label>Datum des Events: *</label>
+            <input type="date" id="event-datum" required>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                Bestellungen sind dann bis zum gewählten Tag um 09:00 Uhr möglich.
+            </p>
+            <div class="modal-buttons">
+                <button onclick="schliesseModal()" style="background: #999;">Abbrechen</button>
+                <button onclick="starteAusserplanmaessig()" class="admin-success">Event starten</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdmOwK3MeR__gaScFtslQO0jfHoJhi4nzISR2l26CmSMQKCh8BxQ0gcmMq7izQiq0rng/exec';
+        
+        let currentEditName = '';
+        let currentEditPasswordHash = '';
+        let loggedInUser = null;
+        let loggedInPasswordHash = null;
+        let countdownInterval = null;
+        let archivierungsDatum = null;
+        let ausserplanmaessigDeadline = null;
+        let freigeschaltet = false;
+        let statusGeladen = false;
+        let historieData = [];
+        
+        function getBerlinTime() {
+            return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
+        }
+        
+        function getAktuellerFreitagZeitraum() {
+            const jetzt = getBerlinTime();
+            const tagDerWoche = jetzt.getDay();
+            const stunde = jetzt.getHours();
+            
+            let letzterFreitag = new Date(jetzt);
+            let tageZurueck = (tagDerWoche + 7 - 5) % 7;
+            if (tagDerWoche === 5 && stunde >= 9) {
+                tageZurueck = 0;
+            } else if (tageZurueck === 0) {
+                tageZurueck = 7;
+            }
+            letzterFreitag.setDate(jetzt.getDate() - tageZurueck);
+            letzterFreitag.setHours(9, 0, 0, 0);
+            
+            return letzterFreitag;
+        }
+        
+        function getNaechstenFreitagDeadline() {
+            const jetzt = getBerlinTime();
+            const tagDerWoche = jetzt.getDay();
+            const stunde = jetzt.getHours();
+            
+            let deadline = new Date(jetzt);
+            deadline.setHours(9, 0, 0, 0);
+            
+            if (tagDerWoche === 5 && stunde < 9) {
+                return deadline;
+            }
+            else if (tagDerWoche === 5 && stunde >= 9) {
+                deadline.setDate(jetzt.getDate() + 7);
+            }
+            else if (tagDerWoche < 5) {
+                deadline.setDate(jetzt.getDate() + (5 - tagDerWoche));
+            }
+            else {
+                deadline.setDate(jetzt.getDate() + (5 + 7 - tagDerWoche));
+            }
+            
+            return deadline;
+        }
+        
+        function formatiereDatum(datum) {
+            const optionen = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return datum.toLocaleDateString('de-DE', optionen);
+        }
+        
+        function toggleHistorieEvent(datum) {
+            const content = document.getElementById('historie-content-' + datum);
+            const toggle = document.getElementById('historie-toggle-' + datum);
+            
+            if (content.classList.contains('open')) {
+                content.classList.remove('open');
+                toggle.classList.remove('open');
+            } else {
+                content.classList.add('open');
+                toggle.classList.add('open');
+            }
+        }
+        
+        function logout() {
+            loggedInUser = null;
+            loggedInPasswordHash = null;
+            document.getElementById('order-form-container').classList.add('hidden');
+            document.getElementById('auth-form-container').classList.remove('hidden');
+            document.getElementById('order-form').reset();
+            document.getElementById('auth-form').reset();
+            document.getElementById('wuerste').value = 0;
+            document.getElementById('brezn').value = 0;
+        }
+        
+        function istEventGeschlossen() {
+            if (!statusGeladen) {
+                return false;
+            }
+            
+            if (ausserplanmaessigDeadline) {
+                const jetzt = getBerlinTime();
+                const deadline = new Date(ausserplanmaessigDeadline);
+                return jetzt >= deadline;
+            }
+            
+            if (freigeschaltet) {
+                const jetzt = getBerlinTime();
+                const deadline = getNaechstenFreitagDeadline();
+                return jetzt >= deadline;
+            }
+            
+            if (!archivierungsDatum) {
+                const jetzt = getBerlinTime();
+                const deadline = getNaechstenFreitagDeadline();
+                return jetzt >= deadline;
+            }
+            
+            const archivDatum = new Date(archivierungsDatum);
+            const aktuellerFreitagStart = getAktuellerFreitagZeitraum();
+            const naechsterFreitagStart = new Date(aktuellerFreitagStart);
+            naechsterFreitagStart.setDate(naechsterFreitagStart.getDate() + 7);
+            
+            const jetzt = getBerlinTime();
+            
+            if (archivDatum >= aktuellerFreitagStart && jetzt < naechsterFreitagStart) {
+                return true;
+            }
+            
+            archivierungsDatum = null;
+            
+            const deadline = getNaechstenFreitagDeadline();
+            return jetzt >= deadline;
+        }
+        
+        function updateAdminButtons() {
+            const btnAusserplanmaessig = document.getElementById('btn-ausserplanmaessig');
+            const btnFreischalten = document.getElementById('btn-freischalten');
+            
+            if (ausserplanmaessigDeadline) {
+                btnAusserplanmaessig.disabled = true;
+                btnAusserplanmaessig.textContent = '🎉 Außerplanmäßiges Event läuft';
+                btnFreischalten.disabled = true;
+                btnFreischalten.textContent = '🔓 Event bereits aktiv';
+            } 
+            else if (freigeschaltet) {
+                btnAusserplanmaessig.disabled = true;
+                btnAusserplanmaessig.textContent = '🎉 Event bereits aktiv';
+                btnFreischalten.disabled = true;
+                btnFreischalten.textContent = '🔓 Freitagsevent läuft';
+            }
+            else {
+                btnAusserplanmaessig.disabled = false;
+                btnAusserplanmaessig.textContent = '🎉 Neues außerplanmäßiges Event starten';
+                btnFreischalten.disabled = false;
+                btnFreischalten.textContent = '🔓 Kommendes Freitagsevent freischalten';
+            }
+        }
+        
+        function ladeArchivierungsStatus(callback) {
+            fetch(`${APPS_SCRIPT_URL}?type=status`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.archiviert) {
+                        archivierungsDatum = data.archiviert;
+                    }
+                    ausserplanmaessigDeadline = data.ausserplanmaessigDeadline || null;
+                    freigeschaltet = data.freigeschaltet || false;
+                    
+                    statusGeladen = true;
+                    
+                    if (ausserplanmaessigDeadline) {
+                        const eventDatum = new Date(ausserplanmaessigDeadline);
+                        const datumStr = formatiereDatum(eventDatum);
+                        document.getElementById('sonder-info').classList.remove('hidden');
+                        document.getElementById('sonder-info').textContent = `⭐ Außerplanmäßiges Event: ${datumStr.split(',')[0]}`;
+                    } else if (freigeschaltet) {
+                        document.getElementById('sonder-info').classList.remove('hidden');
+                        document.getElementById('sonder-info').textContent = '🔓 Freitagsevent vorzeitig freigeschaltet';
+                    }
+                    
+                    updateAdminButtons();
+                    
+                    if (callback) callback();
+                })
+                .catch(e => {
+                    console.error('Fehler beim Laden des Status:', e);
+                    statusGeladen = true;
+                    if (callback) callback();
+                });
+        }
+        
+        function updateCountdown() {
+            const jetzt = getBerlinTime();
+            let deadline;
+            
+            if (ausserplanmaessigDeadline) {
+                deadline = new Date(ausserplanmaessigDeadline);
+            } else {
+                deadline = getNaechstenFreitagDeadline();
+            }
+            
+            const diff = deadline - jetzt;
+            
+            const countdownElement = document.getElementById('countdown');
+            const countdownBox = document.getElementById('countdown-box');
+            const geschlossen = istEventGeschlossen();
+            
+            if (ausserplanmaessigDeadline) {
+                countdownBox.classList.remove('countdown-expired');
+                countdownBox.classList.add('countdown-special');
+                document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⭐ Außerplanmäßiges Event - Zeit bis Bestellende';
+                
+                if (!geschlossen) {
+                    document.getElementById('deadline-warning').classList.add('hidden');
+                    document.getElementById('form-container').classList.remove('hidden');
+                }
+            } else if (freigeschaltet) {
+                countdownBox.classList.remove('countdown-expired');
+                countdownBox.classList.add('countdown-special');
+                document.getElementById('deadline-warning').classList.add('hidden');
+                document.getElementById('form-container').classList.remove('hidden');
+                document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '🔓 Vorzeitig geöffnet - Zeit bis Freitag 09:00';
+            } else {
+                countdownBox.classList.remove('countdown-special');
+                document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⏰ Zeit bis Bestellende';
+            }
+            
+            if (diff <= 0 || geschlossen) {
+                countdownElement.textContent = 'GESCHLOSSEN';
+                countdownBox.classList.add('countdown-expired');
+                countdownBox.classList.remove('countdown-special');
+                
+                const warningText = archivierungsDatum ? 
+                    '⏰ Event wurde vorzeitig geschlossen!<br>Bitte wende dich direkt an <strong>Andreas</strong><br><small>Neue Bestellungen ab nächstem Montag möglich</small>' :
+                    '⏰ Anmeldeschluss überschritten!<br>Bitte wende dich direkt an <strong>Andreas</strong>';
+                
+                document.getElementById('deadline-warning').innerHTML = warningText;
+                document.getElementById('deadline-warning').classList.remove('hidden');
+                document.getElementById('form-container').classList.add('hidden');
+                
+                if (countdownInterval && geschlossen) {
+                    clearInterval(countdownInterval);
+                }
+                return;
+            }
+            
+            const tage = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const stunden = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minuten = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const sekunden = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            const tageStr = tage > 0 ? `${tage}d ` : '';
+            const stundenStr = String(stunden).padStart(2, '0');
+            const minutenStr = String(minuten).padStart(2, '0');
+            const sekundenStr = String(sekunden).padStart(2, '0');
+            
+            countdownElement.textContent = `${tageStr}${stundenStr}:${minutenStr}:${sekundenStr}`;
+        }
+        
+        function initDatum() {
+            let deadline;
+            
+            if (ausserplanmaessigDeadline) {
+                deadline = new Date(ausserplanmaessigDeadline);
+            } else {
+                deadline = getNaechstenFreitagDeadline();
+            }
+            
+            const datumText = formatiereDatum(deadline);
+            document.getElementById('datum-titel').textContent = datumText;
+            
+            const deadlineText = deadline.toLocaleDateString('de-DE', { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'long',
+                year: 'numeric'
+            }) + ', 09:00 Uhr';
+            document.getElementById('deadline-text').textContent = deadlineText;
+            
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+            
+            if (istEventGeschlossen()) {
+                document.getElementById('deadline-warning').classList.remove('hidden');
+                document.getElementById('form-container').classList.add('hidden');
+            }
+        }
+        
+        function zeigeAusserplanmaessigModal() {
+            const password = document.getElementById('admin-password').value;
+            
+            if (!password) {
+                alert('Bitte Admin-Passwort eingeben!');
+                return;
+            }
+            
+            if (ausserplanmaessigDeadline) {
+                const eventDatum = new Date(ausserplanmaessigDeadline);
+                const datumStr = formatiereDatum(eventDatum);
+                alert(`⚠️ Es läuft bereits ein außerplanmäßiges Event!\n\nEvent: ${datumStr.split(',')[0]}, 09:00 Uhr\n\nBitte schließe das laufende Event zuerst ab.`);
+                return;
+            }
+            
+            if (freigeschaltet) {
+                const freitagDatum = getNaechstenFreitagDeadline();
+                const datumStr = formatiereDatum(freitagDatum);
+                alert(`⚠️ Das Freitagsevent ist bereits freigeschaltet!\n\nEvent: ${datumStr.split(',')[0]}, 09:00 Uhr\n\nBitte schließe das laufende Event zuerst ab.`);
+                return;
+            }
+            
+            const heute = new Date();
+            const heuteStr = heute.toISOString().split('T')[0];
+            document.getElementById('event-datum').min = heuteStr;
+            document.getElementById('event-datum').value = heuteStr;
+            
+            document.getElementById('ausserplanmaessig-modal').style.display = 'block';
+        }
+        
+        function schliesseModal() {
+            document.getElementById('ausserplanmaessig-modal').style.display = 'none';
+        }
+        
+        function starteAusserplanmaessig() {
+            const eventDatum = document.getElementById('event-datum').value;
+            
+            if (!eventDatum) {
+                alert('Bitte Datum auswählen!');
+                return;
+            }
+            
+            const password = document.getElementById('admin-password').value;
+            const deadline = new Date(eventDatum + 'T09:00:00');
+            const deadlineISO = deadline.toISOString();
+            
+            fetch(`${APPS_SCRIPT_URL}?action=ausserplanmaessig&adminPassword=${encodeURIComponent(password)}&deadline=${encodeURIComponent(deadlineISO)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        schliesseModal();
+                        document.getElementById('admin-success').style.display = 'block';
+                        document.getElementById('admin-error').style.display = 'none';
+                        document.getElementById('admin-password').value = '';
+                        
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        document.getElementById('admin-error').style.display = 'block';
+                        schliesseModal();
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler:', e);
+                    document.getElementById('admin-error').style.display = 'block';
+                    schliesseModal();
+                });
+        }
+        
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+        
+        function showTab(tab) {
+            if (istEventGeschlossen()) return;
+            
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'neue') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('tab-neue').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('tab-bearbeiten').classList.add('active');
+            }
+        }
+        
+        function showPodiumTab(tab) {
+            document.querySelectorAll('.podium-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.podium-container').forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'alltime') {
+                document.querySelectorAll('.podium-tab')[0].classList.add('active');
+                document.getElementById('podium-alltime').classList.add('active');
+            } else {
+                document.querySelectorAll('.podium-tab')[1].classList.add('active');
+                document.getElementById('podium-year').classList.add('active');
+            }
+        }
+        
+        function createPodium(data, containerId, type) {
+            const container = document.getElementById(containerId);
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="no-data">Noch keine Daten vorhanden</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            const places = [
+                { rank: 1, emoji: '🥇', class: 'place-1' },
+                { rank: 2, emoji: '🥈', class: 'place-2' },
+                { rank: 3, emoji: '🥉', class: 'place-3' }
+            ];
+            
+            places.forEach((place, index) => {
+                if (index < data.length) {
+                    const person = data[index];
+                    const placeDiv = document.createElement('div');
+                    placeDiv.className = `podium-place ${place.class}`;
+                    
+                    placeDiv.innerHTML = `
+                        <div class="podium-person">${place.emoji}</div>
+                        <div class="podium-name">${person.name}</div>
+                        <div class="podium-count">${person.count} ${type === 'wuerste' ? '🥖' : '🥨'}</div>
+                        <div class="podium-step">${place.rank}</div>
+                    `;
+                    
+                    container.appendChild(placeDiv);
+                }
+            });
+        }
+        
+        function berechneBestenliste() {
+            if (!historieData || historieData.length === 0) return;
+            
+            // All-Time Berechnung
+            const allTimeWuerste = {};
+            const allTimeBrezn = {};
+            
+            historieData.forEach(item => {
+                const name = item.Name;
+                const wuerste = parseInt(item.Wuerste) || 0;
+                const brezn = parseInt(item.Brezn) || 0;
+                
+                allTimeWuerste[name] = (allTimeWuerste[name] || 0) + wuerste;
+                allTimeBrezn[name] = (allTimeBrezn[name] || 0) + brezn;
+            });
+            
+            // Sortiere und erstelle Top 3
+            const top3Wuerste = Object.entries(allTimeWuerste)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([name, count]) => ({ name, count }));
+            
+            const top3Brezn = Object.entries(allTimeBrezn)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([name, count]) => ({ name, count }));
+            
+            createPodium(top3Wuerste, 'podium-wuerste-alltime', 'wuerste');
+            createPodium(top3Brezn, 'podium-brezn-alltime', 'brezn');
+            
+            // Jahre extrahieren für Dropdown
+            const years = new Set();
+            historieData.forEach(item => {
+                let datum = item.Datum;
+                if (datum && (datum.includes('T') || datum.includes('Z'))) {
+                    const dateObj = new Date(datum);
+                    years.add(dateObj.getFullYear());
+                } else if (datum) {
+                    const parts = datum.split('.');
+                    if (parts.length >= 3) {
+                        years.add(parseInt(parts[2]));
+                    }
+                }
+            });
+            
+            const sortedYears = Array.from(years).sort((a, b) => b - a);
+            const yearSelect = document.getElementById('year-select');
+            yearSelect.innerHTML = sortedYears.map(year => 
+                `<option value="${year}">${year}</option>`
+            ).join('');
+            
+            if (sortedYears.length > 0) {
+                updateYearPodium();
+            }
+        }
+        
+        function updateYearPodium() {
+            const selectedYear = document.getElementById('year-select').value;
+            if (!selectedYear) return;
+            
+            document.getElementById('year-title-wuerste').textContent = selectedYear;
+            document.getElementById('year-title-brezn').textContent = selectedYear;
+            
+            const yearWuerste = {};
+            const yearBrezn = {};
+            
+            historieData.forEach(item => {
+                let year = null;
+                let datum = item.Datum;
+                
+                if (datum && (datum.includes('T') || datum.includes('Z'))) {
+                    const dateObj = new Date(datum);
+                    year = dateObj.getFullYear();
+                } else if (datum) {
+                    const parts = datum.split('.');
+                    if (parts.length >= 3) {
+                        year = parseInt(parts[2]);
+                    }
+                }
+                
+                if (year === parseInt(selectedYear)) {
+                    const name = item.Name;
+                    const wuerste = parseInt(item.Wuerste) || 0;
+                    const brezn = parseInt(item.Brezn) || 0;
+                    
+                    yearWuerste[name] = (yearWuerste[name] || 0) + wuerste;
+                    yearBrezn[name] = (yearBrezn[name] || 0) + brezn;
+                }
+            });
+            
+            const top3Wuerste = Object.entries(yearWuerste)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([name, count]) => ({ name, count }));
+            
+            const top3Brezn = Object.entries(yearBrezn)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([name, count]) => ({ name, count }));
+            
+            createPodium(top3Wuerste, 'podium-wuerste-year', 'wuerste');
+            createPodium(top3Brezn, 'podium-brezn-year', 'brezn');
+        }
+        
+        document.getElementById('auth-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            
+            if (istEventGeschlossen()) {
+                alert('Event wurde geschlossen!');
+                return;
+            }
+            
+            const name = document.getElementById('auth-name').value;
+            const passwort = document.getElementById('auth-passwort').value;
+            const passwortHash = await hashPassword(passwort);
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Wird geprüft...';
+            
+            fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        loggedInUser = data.name;
+                        loggedInPasswordHash = passwortHash;
+                        document.getElementById('logged-in-user').textContent = data.name;
+                        document.getElementById('auth-form-container').classList.add('hidden');
+                        document.getElementById('order-form-container').classList.remove('hidden');
+                        document.getElementById('auth-form').reset();
+                    } else if (data.error === 'user_not_found') {
+                        const registrieren = confirm(`Der Benutzer "${name}" existiert noch nicht.\n\nMöchtest du einen neuen Account anlegen?`);
+                        
+                        if (registrieren) {
+                            fetch(`${APPS_SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`)
+                                .then(r => r.json())
+                                .then(regData => {
+                                    if (regData.success) {
+                                        loggedInUser = name;
+                                        loggedInPasswordHash = passwortHash;
+                                        document.getElementById('logged-in-user').textContent = name;
+                                        document.getElementById('auth-form-container').classList.add('hidden');
+                                        document.getElementById('order-form-container').classList.remove('hidden');
+                                        
+                                        document.getElementById('success').textContent = '✓ Account erstellt! Jetzt kannst du bestellen.';
+                                        document.getElementById('success').style.display = 'block';
+                                        setTimeout(() => {
+                                            document.getElementById('success').style.display = 'none';
+                                        }, 3000);
+                                        
+                                        document.getElementById('auth-form').reset();
+                                    } else {
+                                        document.getElementById('error').textContent = regData.message || '✗ Dieser Name ist bereits vergeben!';
+                                        document.getElementById('error').style.display = 'block';
+                                        setTimeout(() => {
+                                            document.getElementById('error').style.display = 'none';
+                                        }, 4000);
+                                    }
+                                })
+                                .catch(e => {
+                                    console.error('Registrierungsfehler:', e);
+                                    document.getElementById('error').textContent = '✗ Verbindungsfehler bei der Registrierung!';
+                                    document.getElementById('error').style.display = 'block';
+                                });
+                        } else {
+                            document.getElementById('error').textContent = '✗ Bitte gib einen registrierten Namen ein.';
+                            document.getElementById('error').style.display = 'block';
+                            setTimeout(() => {
+                                document.getElementById('error').style.display = 'none';
+                            }, 3000);
+                        }
+                    } else if (data.error === 'wrong_password') {
+                        document.getElementById('error').textContent = '✗ Falsches Passwort!';
+                        document.getElementById('error').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('error').style.display = 'none';
+                        }, 3000);
+                    } else {
+                        document.getElementById('error').textContent = data.message || '✗ Login fehlgeschlagen!';
+                        document.getElementById('error').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('error').style.display = 'none';
+                        }, 3000);
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler:', e);
+                    document.getElementById('error').textContent = '✗ Verbindungsfehler!';
+                    document.getElementById('error').style.display = 'block';
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Weiter';
+                });
+        });
+        
+        document.getElementById('order-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            
+            if (istEventGeschlossen()) {
+                alert('Event wurde geschlossen!');
+                return;
+            }
+            
+            if (!loggedInUser || !loggedInPasswordHash) {
+                alert('Bitte erst anmelden!');
+                return;
+            }
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Wird gesendet...';
+            
+            const wuerste = document.getElementById('wuerste').value;
+            const brezn = document.getElementById('brezn').value;
+            
+            fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(loggedInUser)}&hash=${encodeURIComponent(loggedInPasswordHash)}&wuerste=${wuerste}&brezn=${brezn}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('success').textContent = '✓ Bestellung erfolgreich!';
+                        document.getElementById('success').style.display = 'block';
+                        document.getElementById('error').style.display = 'none';
+                        document.getElementById('order-form').reset();
+                        document.getElementById('wuerste').value = 0;
+                        document.getElementById('brezn').value = 0;
+                        
+                        setTimeout(() => {
+                            document.getElementById('success').style.display = 'none';
+                            laden();
+                        }, 2000);
+                    } else {
+                        document.getElementById('error').textContent = data.message || '✗ Fehler!';
+                        document.getElementById('error').style.display = 'block';
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler:', e);
+                    document.getElementById('error').textContent = '✗ Verbindungsfehler!';
+                    document.getElementById('error').style.display = 'block';
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Bestellung absenden';
+                });
+        });
+        
+        function laden() {
+            fetch(APPS_SCRIPT_URL)
+                .then(r => r.json())
+                .then(data => {
+                    let html = '';
+                    let summeW = 0;
+                    let summeB = 0;
+                    
+                    if (data && data.length > 0) {
+                        data.forEach(d => {
+                            const w = parseInt(d.Wuerste) || 0;
+                            const b = parseInt(d.Brezn) || 0;
+                            summeW += w;
+                            summeB += b;
+                            html += `<div class="order"><b>${d.Name || 'Unbekannt'}</b>: ${w} Würste, ${b} Brezn</div>`;
+                        });
+                    } else {
+                        html = '<p>Noch keine Bestellungen</p>';
+                    }
+                    
+                    document.getElementById('liste').innerHTML = html;
+                    document.getElementById('summe').innerHTML = 
+                        `🥖 ${summeW} Würste | 🥨 ${summeB} Brezn`;
+                })
+                .catch(e => {
+                    console.error('Fehler beim Laden:', e);
+                    document.getElementById('liste').innerHTML = 
+                        '<p style="color:red;">Fehler beim Laden!</p>';
+                });
+        }
+        
+        function ladeHistorie() {
+            fetch(`${APPS_SCRIPT_URL}?type=historie`)
+                .then(r => r.json())
+                .then(data => {
+                    historieData = data || [];
+                    
+                    if (!data || data.length === 0) {
+                        document.getElementById('historie').innerHTML = 
+                            '<p style="text-align:center; color:#999;">Noch keine vergangenen Events</p>';
+                        return;
+                    }
+                    
+                    // Berechne Bestenliste
+                    berechneBestenliste();
+                    
+                    const grouped = {};
+                    data.forEach(item => {
+                        let datum = item.Datum;
+                        
+                        if (datum && (datum.includes('T') || datum.includes('Z'))) {
+                            const dateObj = new Date(datum);
+                            datum = dateObj.toLocaleDateString('de-DE', { 
+                                weekday: 'short', 
+                                day: '2-digit', 
+                                month: '2-digit', 
+                                year: 'numeric' 
+                            });
+                        }
+                        
+                        if (!grouped[datum]) {
+                            grouped[datum] = [];
+                        }
+                        grouped[datum].push(item);
+                    });
+                    
+                    const sortedDates = Object.keys(grouped).sort((a, b) => {
+                        const parseGermanDate = (dateStr) => {
+                            const cleanStr = dateStr.includes(',') ? dateStr.split(', ')[1] : dateStr;
+                            const parts = cleanStr.split('.');
+                            return new Date(parts[2], parts[1] - 1, parts[0]);
+                        };
+                        
+                        const dateA = parseGermanDate(a);
+                        const dateB = parseGermanDate(b);
+                        
+                        return dateB - dateA;
+                    });
+                    
+                    let html = '';
+                    sortedDates.forEach((datum, index) => {
+                        const events = grouped[datum];
+                        let summeW = 0;
+                        let summeB = 0;
+                        
+                        let itemsHtml = '';
+                        events.forEach(event => {
+                            const w = parseInt(event.Wuerste) || 0;
+                            const b = parseInt(event.Brezn) || 0;
+                            summeW += w;
+                            summeB += b;
+                            itemsHtml += `<div class="historie-item">${event.Name}: ${w} Würste, ${b} Brezn</div>`;
+                        });
+                        
+                        const isOpen = index === 0 ? 'open' : '';
+                        const datumId = datum.replace(/\./g, '-').replace(/,/g, '').replace(/\s/g, '-');
+                        
+                        html += `
+                            <div class="historie-event">
+                                <div class="historie-header" onclick="toggleHistorieEvent('${datumId}')">
+                                    <div class="historie-datum">📅 ${datum}</div>
+                                    <div class="historie-toggle ${isOpen}" id="historie-toggle-${datumId}">▼</div>
+                                </div>
+                                <div class="historie-content ${isOpen}" id="historie-content-${datumId}">
+                                    ${itemsHtml}
+                                    <div class="historie-stats">
+                                        Gesamt: 🥖 ${summeW} Würste | 🥨 ${summeB} Brezn | 👥 ${events.length} Personen
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('historie').innerHTML = html;
+                })
+                .catch(e => {
+                    console.error('Fehler beim Laden der Historie:', e);
+                    document.getElementById('historie').innerHTML = 
+                        '<p style="color:red;">Fehler beim Laden der Historie!</p>';
+                });
+        }
+        
+        function archivieren() {
+            const password = document.getElementById('admin-password').value;
+            
+            if (!password) {
+                alert('Bitte Admin-Passwort eingeben!');
+                return;
+            }
+            
+            if (!confirm('Wirklich vorzeitig abschließen? Alle aktuellen Bestellungen werden in die Historie verschoben!')) {
+                return;
+            }
+            
+            fetch(`${APPS_SCRIPT_URL}?action=archivieren&adminPassword=${encodeURIComponent(password)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('admin-success').style.display = 'block';
+                        document.getElementById('admin-error').style.display = 'none';
+                        document.getElementById('admin-password').value = '';
+                        
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        document.getElementById('admin-error').style.display = 'block';
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler:', e);
+                    document.getElementById('admin-error').style.display = 'block';
+                });
+        }
+        
+        function freischalten() {
+            const password = document.getElementById('admin-password').value;
+            
+            if (!password) {
+                alert('Bitte Admin-Passwort eingeben!');
+                return;
+            }
+            
+            if (ausserplanmaessigDeadline) {
+                alert('⚠️ Es läuft bereits ein außerplanmäßiges Event!');
+                return;
+            }
+            
+            if (freigeschaltet) {
+                alert('⚠️ Das Freitagsevent ist bereits freigeschaltet!');
+                return;
+            }
+            
+            if (!confirm('Freitagsevent vorzeitig freischalten? Bestellungen sind dann bis Freitag 09:00 möglich!')) {
+                return;
+            }
+            
+            fetch(`${APPS_SCRIPT_URL}?action=freischalten&adminPassword=${encodeURIComponent(password)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('admin-success').style.display = 'block';
+                        document.getElementById('admin-error').style.display = 'none';
+                        document.getElementById('admin-password').value = '';
+                        
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        document.getElementById('admin-error').style.display = 'block';
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler:', e);
+                    document.getElementById('admin-error').style.display = 'block';
+                });
+        }
+        
+        document.getElementById('edit-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            
+            if (istEventGeschlossen()) {
+                alert('Event wurde geschlossen!');
+                return;
+            }
+            
+            const name = document.getElementById('edit-name').value;
+            const passwort = document.getElementById('edit-passwort').value;
+            const passwortHash = await hashPassword(passwort);
+            
+            fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) {
+                        document.getElementById('edit-error').textContent = data.message || '✗ Name oder Passwort falsch!';
+                        document.getElementById('edit-error').style.display = 'block';
+                        document.getElementById('edit-data').style.display = 'none';
+                        return;
+                    }
+                    
+                    currentEditName = data.name;
+                    currentEditPasswordHash = passwortHash;
+                    
+                    return fetch(APPS_SCRIPT_URL);
+                })
+                .then(r => r ? r.json() : null)
+                .then(bestellungen => {
+                    if (!bestellungen) return;
+                    
+                    const bestellung = bestellungen.find(item => item.Name && item.Name.toLowerCase() === currentEditName.toLowerCase());
+                    
+                    if (bestellung) {
+                        document.getElementById('edit-wuerste').value = bestellung.Wuerste || 0;
+                        document.getElementById('edit-brezn').value = bestellung.Brezn || 0;
+                        document.getElementById('edit-data').style.display = 'block';
+                        document.getElementById('edit-success').style.display = 'none';
+                        document.getElementById('edit-error').style.display = 'none';
+                    } else {
+                        document.getElementById('edit-error').textContent = '✗ Keine Bestellung gefunden!';
+                        document.getElementById('edit-error').style.display = 'block';
+                        document.getElementById('edit-data').style.display = 'none';
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler:', e);
+                    document.getElementById('edit-error').textContent = '✗ Verbindungsfehler!';
+                    document.getElementById('edit-error').style.display = 'block';
+                    document.getElementById('edit-data').style.display = 'none';
+                });
+        });
+        
+        function updateOrder() {
+            if (istEventGeschlossen()) {
+                alert('Event wurde geschlossen!');
+                return;
+            }
+            
+            const newWuerste = document.getElementById('edit-wuerste').value;
+            const newBrezn = document.getElementById('edit-brezn').value;
+            
+            fetch(`${APPS_SCRIPT_URL}?action=update&name=${encodeURIComponent(currentEditName)}&hash=${encodeURIComponent(currentEditPasswordHash)}&wuerste=${newWuerste}&brezn=${newBrezn}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('edit-success').style.display = 'block';
+                        document.getElementById('edit-error').style.display = 'none';
+                        
+                        setTimeout(() => {
+                            document.getElementById('edit-success').style.display = 'none';
+                            document.getElementById('edit-data').style.display = 'none';
+                            document.getElementById('edit-form').reset();
+                            laden();
+                        }, 2000);
+                    } else {
+                        document.getElementById('edit-error').textContent = '✗ Fehler beim Aktualisieren!';
+                        document.getElementById('edit-error').style.display = 'block';
+                    }
+                })
+                .catch(e => {
+                    console.error('Update Fehler:', e);
+                    document.getElementById('edit-error').textContent = '✗ Verbindungsfehler!';
+                    document.getElementById('edit-error').style.display = 'block';
+                });
+        }
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById('ausserplanmaessig-modal');
+            if (event.target === modal) {
+                schliesseModal();
+            }
+        }
+        
+        ladeArchivierungsStatus(function() {
+            initDatum();
+            laden();
+            ladeHistorie();
+            
+            setInterval(laden, 30000);
+            setInterval(ladeHistorie, 60000);
+        });
+    </script>
+</body>
+</html>
