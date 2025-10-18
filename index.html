@@ -78,6 +78,11 @@
             border-left: 4px solid #b9052d;
             border-radius: 5px;
         }
+        .order-price {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
         .success {
             background: #adc646;
             color: white;
@@ -113,6 +118,13 @@
             text-align: center;
             font-weight: bold;
         }
+        .price-info {
+            background: #f0f8ff;
+            border-left: 4px solid #0087a0;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
         label {
             font-weight: bold;
             display: block;
@@ -126,6 +138,11 @@
         h3 {
             color: #6e031b;
             margin-top: 20px;
+        }
+        h4 {
+            color: #6e031b;
+            margin-top: 15px;
+            margin-bottom: 10px;
         }
         .date-subtitle {
             text-align: center;
@@ -180,6 +197,20 @@
             display: grid;
             gap: 10px;
             margin-top: 15px;
+        }
+        .price-form {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .price-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .price-inputs input {
+            margin: 5px 0;
         }
         .historie-event {
             background: #f5f5f5;
@@ -318,7 +349,7 @@
             align-items: flex-end;
             justify-content: center;
             gap: 10px;
-            height: 280px;
+            height: 250px;
             margin-top: 20px;
         }
         .podium-place {
@@ -356,12 +387,12 @@
             color: white;
             font-weight: bold;
             font-size: 24px;
-            transition: height 0.3s;
         }
         .place-1 {
             order: 2;
         }
         .place-1 .podium-step {
+            height: 140px;
             background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
         }
         .place-1 .podium-person {
@@ -371,12 +402,14 @@
             order: 1;
         }
         .place-2 .podium-step {
+            height: 100px;
             background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%);
         }
         .place-3 {
             order: 3;
         }
         .place-3 .podium-step {
+            height: 70px;
             background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
         }
         .year-selector {
@@ -509,12 +542,23 @@
                 <h3>Deine Bestellung</h3>
                 <p class="help-text">Angemeldet als: <strong id="logged-in-user"></strong></p>
                 
+                <div class="price-info">
+                    <strong>Aktuelle Preise:</strong><br>
+                    🥖 Weißwurst: <span id="display-preis-wurst">2,50</span> €<br>
+                    🥨 Breze: <span id="display-preis-breze">1,50</span> €
+                </div>
+                
                 <form id="order-form">
                     <label>Anzahl Weißwürste: *</label>
                     <input type="number" id="wuerste" value="0" min="0" max="50" required>
                     
                     <label>Anzahl Brezn: *</label>
                     <input type="number" id="brezn" value="0" min="0" max="50" required>
+                    
+                    <div class="price-info" id="order-total-preview" style="margin-top: 15px;">
+                        <strong>Vorschau:</strong><br>
+                        <span id="order-preview-text">Bitte Mengen eingeben</span>
+                    </div>
                     
                     <button type="submit" id="order-submit-btn">Bestellung absenden</button>
                     <button type="button" onclick="logout()" class="secondary" style="margin-top: 5px;">Abmelden</button>
@@ -596,6 +640,22 @@
                 <input type="password" id="admin-password" placeholder="Admin-Passwort" autocomplete="current-password" style="margin-top: 10px;">
             </form>
             
+            <div class="price-form">
+                <h4>💶 Preisverwaltung</h4>
+                <p class="help-text">Preise gelten für neue Bestellungen. Bestehende Bestellungen behalten ihre ursprünglichen Preise.</p>
+                <div class="price-inputs">
+                    <div>
+                        <label>Preis pro Wurst (€):</label>
+                        <input type="number" id="admin-preis-wurst" step="0.10" min="0" placeholder="2.50">
+                    </div>
+                    <div>
+                        <label>Preis pro Breze (€):</label>
+                        <input type="number" id="admin-preis-breze" step="0.10" min="0" placeholder="1.50">
+                    </div>
+                </div>
+                <button onclick="speicherePreise()" class="admin" style="margin-top: 10px;">Preise speichern</button>
+            </div>
+            
             <div class="admin-buttons">
                 <button onclick="archivieren()" class="admin">Event vorzeitig abschließen</button>
                 <button onclick="zeigeAusserplanmaessigModal()" class="admin-success" id="btn-ausserplanmaessig">🎉 Neues außerplanmäßiges Event starten</button>
@@ -650,11 +710,95 @@
         let statusGeladen = false;
         let historieData = [];
         let hasExistingOrder = false;
+        let currentPreisWurst = 2.50;
+        let currentPreisBreze = 1.50;
         
         const EMPTY_PASSWORD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
         
         function getBerlinTime() {
             return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
+        }
+        
+        function formatPrice(price) {
+            return parseFloat(price).toFixed(2).replace('.', ',');
+        }
+        
+        function updateOrderPreview() {
+            const wuerste = parseInt(document.getElementById('wuerste').value) || 0;
+            const brezn = parseInt(document.getElementById('brezn').value) || 0;
+            
+            const preisWuerste = wuerste * currentPreisWurst;
+            const preisBrezn = brezn * currentPreisBreze;
+            const gesamt = preisWuerste + preisBrezn;
+            
+            const wurstText = wuerste === 1 ? 'Wurst' : 'Würste';
+            
+            document.getElementById('order-preview-text').innerHTML = 
+                `${wuerste} ${wurstText} × ${formatPrice(currentPreisWurst)} € = ${formatPrice(preisWuerste)} €<br>` +
+                `${brezn} Brezn × ${formatPrice(currentPreisBreze)} € = ${formatPrice(preisBrezn)} €<br>` +
+                `<strong>Gesamt: ${formatPrice(gesamt)} €</strong>`;
+        }
+        
+        function ladePreise() {
+            fetch(`${APPS_SCRIPT_URL}?type=preise`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        currentPreisWurst = data.preisWurst;
+                        currentPreisBreze = data.preisBreze;
+                        
+                        document.getElementById('display-preis-wurst').textContent = formatPrice(currentPreisWurst);
+                        document.getElementById('display-preis-breze').textContent = formatPrice(currentPreisBreze);
+                        
+                        document.getElementById('admin-preis-wurst').value = currentPreisWurst.toFixed(2);
+                        document.getElementById('admin-preis-breze').value = currentPreisBreze.toFixed(2);
+                        
+                        updateOrderPreview();
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler beim Laden der Preise:', e);
+                });
+        }
+        
+        function speicherePreise() {
+            const password = document.getElementById('admin-password').value;
+            
+            if (!password) {
+                alert('Bitte Admin-Passwort eingeben!');
+                return;
+            }
+            
+            const preisWurst = document.getElementById('admin-preis-wurst').value;
+            const preisBreze = document.getElementById('admin-preis-breze').value;
+            
+            if (!preisWurst || !preisBreze) {
+                alert('Bitte beide Preise eingeben!');
+                return;
+            }
+            
+            fetch(`${APPS_SCRIPT_URL}?action=setPreise&adminPassword=${encodeURIComponent(password)}&preisWurst=${preisWurst}&preisBreze=${preisBreze}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('admin-success').textContent = '✓ Preise aktualisiert!';
+                        document.getElementById('admin-success').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('admin-success').style.display = 'none';
+                        }, 3000);
+                        
+                        ladePreise();
+                    } else {
+                        document.getElementById('admin-error').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('admin-error').style.display = 'none';
+                        }, 5000);
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler:', e);
+                    document.getElementById('admin-error').style.display = 'block';
+                });
         }
         
         function getAktuellerFreitagZeitraum() {
@@ -734,7 +878,17 @@
             document.getElementById('wuerste').value = 0;
             document.getElementById('brezn').value = 0;
             document.getElementById('order-submit-btn').textContent = 'Bestellung absenden';
+            updateOrderPreview();
         }
+        
+        // Event Listeners für Live-Preview
+        document.addEventListener('DOMContentLoaded', function() {
+            const wursteInput = document.getElementById('wuerste');
+            const breznInput = document.getElementById('brezn');
+            
+            if (wursteInput) wursteInput.addEventListener('input', updateOrderPreview);
+            if (breznInput) breznInput.addEventListener('input', updateOrderPreview);
+        });
         
         function istEventGeschlossen() {
             if (!statusGeladen) {
@@ -1032,11 +1186,6 @@
             
             container.innerHTML = '';
             
-            // Finde Maximum für proportionale Höhen
-            const maxCount = Math.max(...data.map(p => p.count));
-            const minHeight = 60;
-            const maxHeight = 200;
-            
             const places = [
                 { rank: 1, emoji: '🥇', class: 'place-1' },
                 { rank: 2, emoji: '🥈', class: 'place-2' },
@@ -1049,15 +1198,11 @@
                     const placeDiv = document.createElement('div');
                     placeDiv.className = `podium-place ${place.class}`;
                     
-                    // Berechne proportionale Höhe
-                    const heightPercent = person.count / maxCount;
-                    const height = Math.max(minHeight, heightPercent * maxHeight);
-                    
                     placeDiv.innerHTML = `
                         <div class="podium-person">${place.emoji}</div>
                         <div class="podium-name">${person.name}</div>
                         <div class="podium-count">${person.count} ${type === 'wuerste' ? '🥖' : '🥨'}</div>
-                        <div class="podium-step" style="height: ${height}px;">${place.rank}</div>
+                        <div class="podium-step">${place.rank}</div>
                     `;
                     
                     container.appendChild(placeDiv);
@@ -1265,11 +1410,13 @@
                         document.getElementById('wuerste').value = data.wuerste || 0;
                         document.getElementById('brezn').value = data.brezn || 0;
                         document.getElementById('order-submit-btn').textContent = 'Bestellung aktualisieren';
+                        updateOrderPreview();
                     } else {
                         hasExistingOrder = false;
                         document.getElementById('wuerste').value = 0;
                         document.getElementById('brezn').value = 0;
                         document.getElementById('order-submit-btn').textContent = 'Bestellung absenden';
+                        updateOrderPreview();
                     }
                 })
                 .catch(e => {
@@ -1461,7 +1608,7 @@
             const wuerste = document.getElementById('wuerste').value;
             const brezn = document.getElementById('brezn').value;
             
-            fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(loggedInUser)}&hash=${encodeURIComponent(loggedInPasswordHash)}&wuerste=${wuerste}&brezn=${brezn}`)
+            fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(loggedInUser)}&hash=${encodeURIComponent(loggedInPasswordHash)}&wuerste=${wuerste}&brezn=${brezn}&preisWurst=${currentPreisWurst}&preisBreze=${currentPreisBreze}`)
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
@@ -1511,15 +1658,25 @@
                     let html = '';
                     let summeW = 0;
                     let summeB = 0;
+                    let summeGeld = 0;
                     
                     if (data && data.length > 0) {
                         data.forEach(d => {
                             const w = parseInt(d.Wuerste) || 0;
                             const b = parseInt(d.Brezn) || 0;
+                            const pW = parseFloat(d.PreisWurst) || 0;
+                            const pB = parseFloat(d.PreisBreze) || 0;
+                            const gesamt = (w * pW) + (b * pB);
+                            
                             summeW += w;
                             summeB += b;
+                            summeGeld += gesamt;
+                            
                             const wurstText = pluralize(w, 'Wurst', 'Würste');
-                            html += `<div class="order"><b>${d.Name || 'Unbekannt'}</b>: ${w} ${wurstText}, ${b} Brezn</div>`;
+                            html += `<div class="order">
+                                <b>${d.Name || 'Unbekannt'}</b>: ${w} ${wurstText}, ${b} Brezn
+                                <div class="order-price">Gesamt: ${formatPrice(gesamt)} €</div>
+                            </div>`;
                         });
                     } else {
                         html = '<p>Noch keine Bestellungen</p>';
@@ -1528,7 +1685,7 @@
                     document.getElementById('liste').innerHTML = html;
                     const wurstSummeText = pluralize(summeW, 'Wurst', 'Würste');
                     document.getElementById('summe').innerHTML = 
-                        `🥖 ${summeW} ${wurstSummeText} | 🥨 ${summeB} Brezn`;
+                        `🥖 ${summeW} ${wurstSummeText} | 🥨 ${summeB} Brezn | 💶 ${formatPrice(summeGeld)} €`;
                 })
                 .catch(e => {
                     console.error('Fehler beim Laden:', e);
@@ -1589,15 +1746,22 @@
                         const events = grouped[datum];
                         let summeW = 0;
                         let summeB = 0;
+                        let summeGeld = 0;
                         
                         let itemsHtml = '';
                         events.forEach(event => {
                             const w = parseInt(event.Wuerste) || 0;
                             const b = parseInt(event.Brezn) || 0;
+                            const pW = parseFloat(event.PreisWurst) || 0;
+                            const pB = parseFloat(event.PreisBreze) || 0;
+                            const gesamt = (w * pW) + (b * pB);
+                            
                             summeW += w;
                             summeB += b;
+                            summeGeld += gesamt;
+                            
                             const wurstText = pluralize(w, 'Wurst', 'Würste');
-                            itemsHtml += `<div class="historie-item">${event.Name}: ${w} ${wurstText}, ${b} Brezn</div>`;
+                            itemsHtml += `<div class="historie-item">${event.Name}: ${w} ${wurstText}, ${b} Brezn (${formatPrice(gesamt)} €)</div>`;
                         });
                         
                         const isOpen = index === 0 ? 'open' : '';
@@ -1613,7 +1777,7 @@
                                 <div class="historie-content ${isOpen}" id="historie-content-${datumId}">
                                     ${itemsHtml}
                                     <div class="historie-stats">
-                                        Gesamt: 🥖 ${summeW} ${wurstSummeText} | 🥨 ${summeB} Brezn | 👥 ${events.length} ${pluralize(events.length, 'Person', 'Personen')}
+                                        Gesamt: 🥖 ${summeW} ${wurstSummeText} | 🥨 ${summeB} Brezn | 👥 ${events.length} ${pluralize(events.length, 'Person', 'Personen')} | 💶 ${formatPrice(summeGeld)} €
                                     </div>
                                 </div>
                             </div>
@@ -1726,6 +1890,7 @@
         
         ladeArchivierungsStatus(function() {
             initDatum();
+            ladePreise();
             laden();
             ladeHistorie();
             
