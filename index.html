@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weißwurstfrühstück</title>
+    <link rel="icon" href="https://fevwursten.github.io/weisswurst.png" type="image/png">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -284,6 +285,12 @@
             color: #666;
             margin-top: 5px;
         }
+        .wurst-icon {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            display: inline-block;
+        }
         
         /* Siegertreppe Styles */
         .podium-section {
@@ -465,7 +472,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🥖 Weißwurstfrühstück 🥨</h1>
+        <h1><img src="https://fevwursten.github.io/weisswurst.png" class="wurst-icon"> Weißwurstfrühstück 🥨</h1>
         <div class="date-subtitle" id="datum-titel">Lädt...</div>
         
         <div class="info-badge hidden" id="sonder-info">
@@ -490,7 +497,7 @@
             
             <div class="price-info">
                 <strong>Aktuelle Preise:</strong><br>
-                🥖 Weißwurst: <span id="display-preis-wurst">2,50</span> €<br>
+                <img src="https://fevwursten.github.io/weisswurst.png" class="wurst-icon"> Weißwurst: <span id="display-preis-wurst">2,50</span> €<br>
                 🥨 Breze: <span id="display-preis-breze">1,50</span> €
             </div>
             
@@ -537,7 +544,7 @@
         <div id="podium-alltime" class="podium-container active">
             <div class="podium-wrapper">
                 <div class="podium-block">
-                    <div class="podium-title">🥖 Würste All-Time</div>
+                    <div class="podium-title"><img src="https://fevwursten.github.io/weisswurst.png" class="wurst-icon"> Würste All-Time</div>
                     <div id="podium-wuerste-alltime" class="podium">
                         <div class="no-data">Lädt...</div>
                     </div>
@@ -561,7 +568,7 @@
             </div>
             <div class="podium-wrapper">
                 <div class="podium-block">
-                    <div class="podium-title">🥖 Würste <span id="year-title-wuerste"></span></div>
+                    <div class="podium-title"><img src="https://fevwursten.github.io/weisswurst.png" class="wurst-icon"> Würste <span id="year-title-wuerste"></span></div>
                     <div id="podium-wuerste-year" class="podium">
                         <div class="no-data">Bitte Jahr auswählen</div>
                     </div>
@@ -661,6 +668,7 @@
 
     <script>
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdmOwK3MeR__gaScFtslQO0jfHoJhi4nzISR2l26CmSMQKCh8BxQ0gcmMq7izQiq0rng/exec';
+        const WURST_ICON = '<img src="https://fevwursten.github.io/weisswurst.png" class="wurst-icon">';
         
         let countdownInterval = null;
         let archivierungsDatum = null;
@@ -683,10 +691,9 @@
         }
         
         function berechneSenfglaeser(wuerste) {
-            // 30g Senf pro Wurst, 335ml = 335g pro Glas
-            const senfBedarf = wuerste * 30; // in Gramm
+            const senfBedarf = wuerste * 30;
             const glaeser = senfBedarf / 335;
-            return Math.ceil(glaeser); // Aufrunden auf volle Gläser
+            return Math.ceil(glaeser);
         }
         
         function updateOrderPreview() {
@@ -847,7 +854,6 @@
             if (breznInput) breznInput.addEventListener('input', updateOrderPreview);
         });
         
-        // Countdown nur wenn Tab aktiv
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 if (countdownInterval) clearInterval(countdownInterval);
@@ -933,12 +939,10 @@
                     
                     statusGeladen = true;
                     
-                    // Nur bei außerplanmäßigem Event Badge anzeigen (NICHT bei vorzeitig freigeschaltetem Freitag)
                     if (ausserplanmaessigDeadline) {
                         const eventDatum = new Date(ausserplanmaessigDeadline);
-                        const wochentag = eventDatum.getDay(); // 0=Sonntag, 5=Freitag
+                        const wochentag = eventDatum.getDay();
                         
-                        // Nur anzeigen wenn es KEIN Freitag ist
                         if (wochentag !== 5) {
                             const datumStr = formatiereDatum(eventDatum);
                             document.getElementById('sonder-info').classList.remove('hidden');
@@ -978,12 +982,10 @@
                 const wochentag = eventDatum.getDay();
                 
                 if (wochentag !== 5) {
-                    // Außerplanmäßiges Event (kein Freitag)
                     countdownBox.classList.remove('countdown-expired');
                     countdownBox.classList.add('countdown-special');
                     document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⭐ Außerplanmäßiges Event - Zeit bis Bestellende';
                 } else {
-                    // Normales Styling für Freitags-Event
                     countdownBox.classList.remove('countdown-expired', 'countdown-special');
                     document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⏰ Zeit bis Bestellende';
                 }
@@ -1163,6 +1165,8 @@
                 { rank: 3, emoji: '🥉', class: 'place-3' }
             ];
             
+            const icon = type === 'wuerste' ? WURST_ICON : '🥨';
+            
             places.forEach((place, index) => {
                 if (index < data.length) {
                     const person = data[index];
@@ -1172,7 +1176,7 @@
                     placeDiv.innerHTML = `
                         <div class="podium-person">${place.emoji}</div>
                         <div class="podium-name">${person.name}</div>
-                        <div class="podium-count">${person.count} ${type === 'wuerste' ? '🥖' : '🥨'}</div>
+                        <div class="podium-count">${person.count} ${icon}</div>
                         <div class="podium-step">${place.rank}</div>
                     `;
                     
@@ -1389,7 +1393,6 @@
             });
         }
         
-        // ONE-STEP ORDER FORM
         document.getElementById('order-form').addEventListener('submit', async e => {
             e.preventDefault();
             
@@ -1412,7 +1415,6 @@
             const b = parseInt(brezn);
             
             try {
-                // Prüfung: Mindestens 1 Wurst ODER 1 Breze bei neuer Bestellung
                 if (w === 0 && b === 0) {
                     const checkResponse = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
                     const checkData = await checkResponse.json();
@@ -1443,7 +1445,6 @@
                     }
                 }
                 
-                // 1. Prüfe ob User existiert (Login)
                 const loginResponse = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
                 const loginData = await loginResponse.json();
                 
@@ -1623,7 +1624,7 @@
                     const senfText = pluralize(senfglaeser, 'Glas', 'Gläser');
                     
                     document.getElementById('summe').innerHTML = 
-                        `🥖 ${summeW} ${wurstSummeText} (${formatPrice(summeGeldW)} €) | 🥨 ${summeB} Brezn (${formatPrice(summeGeldB)} €)<br>` +
+                        `${WURST_ICON} ${summeW} ${wurstSummeText} (${formatPrice(summeGeldW)} €) | 🥨 ${summeB} Brezn (${formatPrice(summeGeldB)} €)<br>` +
                         `🍯 ${senfglaeser} ${senfText} Senf (335ml) | 💶 ${formatPrice(gesamtGeld)} €`;
                 })
                 .catch(e => {
@@ -1730,7 +1731,7 @@
                                 <div class="historie-content ${isOpen}" id="historie-content-${datumId}">
                                     ${itemsHtml}
                                     <div class="historie-stats">
-                                        Gesamt: 🥖 ${summeW} ${wurstSummeText} | 🥨 ${summeB} Brezn | 👥 ${events.length} ${pluralize(events.length, 'Person', 'Personen')} | 💶 ${formatPrice(summeGeld)} €
+                                        Gesamt: ${WURST_ICON} ${summeW} ${wurstSummeText} | 🥨 ${summeB} Brezn | 👥 ${events.length} ${pluralize(events.length, 'Person', 'Personen')} | 💶 ${formatPrice(summeGeld)} €
                                     </div>
                                 </div>
                             </div>
