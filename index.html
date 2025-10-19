@@ -71,6 +71,23 @@
             font-size: 14px;
             margin-top: 5px;
         }
+        .qr-code-section {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .qr-code-section img {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .qr-code-section p {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
         .success {
             background: #adc646;
             color: white;
@@ -697,6 +714,7 @@
     <script>
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdmOwK3MeR__gaScFtslQO0jfHoJhi4nzISR2l26CmSMQKCh8BxQ0gcmMq7izQiq0rng/exec';
         const WURST_ICON = '<img src="https://fevwursten.github.io/weisswurst.png" class="wurst-icon">';
+        const PAYPAL_USERNAME = 'brotzeit';
         
         let countdownInterval = null;
         let archivierungsDatum = null;
@@ -1441,8 +1459,8 @@
             const brezn = document.getElementById('brezn').value;
             const passwortHash = await hashPassword(passwort);
             
-            const w = parseInt(wuerste);
-            const b = parseInt(brezn);
+            const w = parseInt(wuerste) || 0;
+            const b = parseInt(brezn) || 0;
             
             try {
                 if (w === 0 && b === 0) {
@@ -1517,8 +1535,6 @@
                         document.getElementById('error').style.display = 'none';
                         
                         document.getElementById('order-form').reset();
-                        document.getElementById('wuerste').value = 0;
-                        document.getElementById('brezn').value = 0;
                         updateOrderPreview();
                         
                         setTimeout(() => {
@@ -1547,8 +1563,6 @@
                             document.getElementById('error').style.display = 'none';
                             
                             document.getElementById('order-form').reset();
-                            document.getElementById('wuerste').value = 0;
-                            document.getElementById('brezn').value = 0;
                             updateOrderPreview();
                             
                             setTimeout(() => {
@@ -1600,6 +1614,7 @@
                     let summeB = 0;
                     let summeGeldW = 0;
                     let summeGeldB = 0;
+                    const geschlossen = istEventGeschlossen();
                     
                     if (data && data.length > 0) {
                         data.forEach(d => {
@@ -1636,10 +1651,26 @@
                             summeGeldW += (w * pW);
                             summeGeldB += (b * pB);
                             
+                            // QR-Code nur nach Deadline und nur wenn Betrag > 0
+                            let qrCodeHTML = '';
+                            if (geschlossen && gesamt > 0) {
+                                const betragPayPal = gesamt.toFixed(2).replace(',', '.');
+                                const paypalLink = `https://paypal.me/${PAYPAL_USERNAME}/${betragPayPal}?locale.x=de_DE`;
+                                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paypalLink)}`;
+                                
+                                qrCodeHTML = `
+                                    <div class="qr-code-section">
+                                        <img src="${qrCodeUrl}" alt="PayPal QR-Code">
+                                        <p>💶 QR-Code scannen zum Bezahlen<br>PayPal: paypal.me/${PAYPAL_USERNAME}</p>
+                                    </div>
+                                `;
+                            }
+                            
                             const wurstText = pluralize(w, 'Wurst', 'Würste');
                             html += `<div class="order">
                                 <b>${d.Name || 'Unbekannt'}</b>: ${w} ${wurstText}, ${b} Brezn
                                 <div class="order-price">Gesamt: ${formatPrice(gesamt)} €</div>
+                                ${qrCodeHTML}
                             </div>`;
                         });
                     } else {
@@ -1885,5 +1916,3 @@
     </script>
 </body>
 </html>
-
-
