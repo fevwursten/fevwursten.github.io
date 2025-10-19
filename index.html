@@ -1695,118 +1695,148 @@
                 });
         }
         
-        function ladeHistorie() {
-            fetch(`${APPS_SCRIPT_URL}?type=historie`)
-                .then(r => r.json())
-                .then(data => {
-                    historieData = data || [];
+function ladeHistorie() {
+    fetch(`${APPS_SCRIPT_URL}?type=historie`)
+        .then(r => r.json())
+        .then(data => {
+            historieData = data || [];
+            
+            if (!data || data.length === 0) {
+                document.getElementById('historie').innerHTML = 
+                    '<p style="text-align:center; color:#999;">Noch keine vergangenen Events</p>';
+                return;
+            }
+            
+            berechneBestenliste();
+            
+            const grouped = {};
+            data.forEach(item => {
+                let datum = item.Datum;
+                
+                if (datum && (datum.includes('T') || datum.includes('Z'))) {
+                    const dateObj = new Date(datum);
+                    datum = dateObj.toLocaleDateString('de-DE', { 
+                        weekday: 'short', 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric' 
+                    });
+                }
+                
+                if (!grouped[datum]) {
+                    grouped[datum] = [];
+                }
+                grouped[datum].push(item);
+            });
+            
+            const sortedDates = Object.keys(grouped).sort((a, b) => {
+                const parseGermanDate = (dateStr) => {
+                    const cleanStr = dateStr.includes(',') ? dateStr.split(', ')[1] : dateStr;
+                    const parts = cleanStr.split('.');
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
+                };
+                
+                const dateA = parseGermanDate(a);
+                const dateB = parseGermanDate(b);
+                
+                return dateB - dateA;
+            });
+            
+            let html = '';
+            sortedDates.forEach((datum, index) => {
+                const events = grouped[datum];
+                let summeW = 0;
+                let summeB = 0;
+                let summeGeld = 0;
+                
+                let itemsHtml = '';
+                events.forEach(event => {
+                    const w = parseInt(event.Wuerste) || 0;
+                    const b = parseInt(event.Brezn) || 0;
                     
-                    if (!data || data.length === 0) {
-                        document.getElementById('historie').innerHTML = 
-                            '<p style="text-align:center; color:#999;">Noch keine vergangenen Events</p>';
-                        return;
+                    let pW = 0;
+                    let pB = 0;
+                    
+                    try {
+                        if (event.PreisWurst !== undefined && event.PreisWurst !== null && event.PreisWurst !== '') {
+                            pW = parseFloat(String(event.PreisWurst).replace(',', '.')) || 0;
+                        }
+                        if (event.PreisBreze !== undefined && event.PreisBreze !== null && event.PreisBreze !== '') {
+                            pB = parseFloat(String(event.PreisBreze).replace(',', '.')) || 0;
+                        }
+                    } catch(e) {
+                        pW = 0;
+                        pB = 0;
                     }
                     
-                    berechneBestenliste();
+                    const gesamt = (w * pW) + (b * pB);
                     
-                    const grouped = {};
-                    data.forEach(item => {
-                        let datum = item.Datum;
-                        
-                        if (datum && (datum.includes('T') || datum.includes('Z'))) {
-                            const dateObj = new Date(datum);
-                            datum = dateObj.toLocaleDateString('de-DE', { 
-                                weekday: 'short', 
-                                day: '2-digit', 
-                                month: '2-digit', 
-                                year: 'numeric' 
-                            });
-                        }
-                        
-                        if (!grouped[datum]) {
-                            grouped[datum] = [];
-                        }
-                        grouped[datum].push(item);
-                    });
+                    summeW += w;
+                    summeB += b;
+                    summeGeld += gesamt;
                     
-                    const sortedDates = Object.keys(grouped).sort((a, b) => {
-                        const parseGermanDate = (dateStr) => {
-                            const cleanStr = dateStr.includes(',') ? dateStr.split(', ')[1] : dateStr;
-                            const parts = cleanStr.split('.');
-                            return new Date(parts[2], parts[1] - 1, parts[0]);
-                        };
+                    // QR-Code mit Note-Parameter
+                    let qrCodeHTML = '';
+                    if (gesamt > 0) {
+                        const betragPayPal = gesamt.toFixed(2).replace(',', '.');
+                        const eventName = event.Name || 'Unbekannt';
+                        const note = encodeURIComponent(`${eventName} - Weißwurst ${datum}`);
+                        const paypalLink = `https://paypal.me/${PAYPAL_USERNAME}/${betragPayPal}?note=${note}`;
+                        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paypalLink)}`;
                         
-                        const dateA = parseGermanDate(a);
-                        const dateB = parseGermanDate(b);
-                        
-                        return dateB - dateA;
-                    });
-                    
-                    let html = '';
-                    sortedDates.forEach((datum, index) => {
-                        const events = grouped[datum];
-                        let summeW = 0;
-                        let summeB = 0;
-                        let summeGeld = 0;
-                        
-                        let itemsHtml = '';
-                        events.forEach(event => {
-                            const w = parseInt(event.Wuerste) || 0;
-                            const b = parseInt(event.Brezn) || 0;
-                            
-                            let pW = 0;
-                            let pB = 0;
-                            
-                            try {
-                                if (event.PreisWurst !== undefined && event.PreisWurst !== null && event.PreisWurst !== '') {
-                                    pW = parseFloat(String(event.PreisWurst).replace(',', '.')) || 0;
-                                }
-                                if (event.PreisBreze !== undefined && event.PreisBreze !== null && event.PreisBreze !== '') {
-                                    pB = parseFloat(String(event.PreisBreze).replace(',', '.')) || 0;
-                                }
-                            } catch(e) {
-                                pW = 0;
-                                pB = 0;
-                            }
-                            
-                            const gesamt = (w * pW) + (b * pB);
-                            
-                            summeW += w;
-                            summeB += b;
-                            summeGeld += gesamt;
-                            
-                            const wurstText = pluralize(w, 'Wurst', 'Würste');
-                            itemsHtml += `<div class="historie-item">${event.Name}: ${w} ${wurstText}, ${b} Brezn (${formatPrice(gesamt)} €)</div>`;
-                        });
-                        
-                        const isOpen = index === 0 ? 'open' : '';
-                        const datumId = datum.replace(/\./g, '-').replace(/,/g, '').replace(/\s/g, '-');
-                        const wurstSummeText = pluralize(summeW, 'Wurst', 'Würste');
-                        
-                        html += `
-                            <div class="historie-event">
-                                <div class="historie-header" onclick="toggleHistorieEvent('${datumId}')">
-                                    <div class="historie-datum">📅 ${datum}</div>
-                                    <div class="historie-toggle ${isOpen}" id="historie-toggle-${datumId}">▼</div>
-                                </div>
-                                <div class="historie-content ${isOpen}" id="historie-content-${datumId}">
-                                    ${itemsHtml}
-                                    <div class="historie-stats">
-                                        Gesamt: ${WURST_ICON} ${summeW} ${wurstSummeText} | 🥨 ${summeB} Brezn | 👥 ${events.length} ${pluralize(events.length, 'Person', 'Personen')} | 💶 ${formatPrice(summeGeld)} €
-                                    </div>
-                                </div>
+                        qrCodeHTML = `
+                            <div class="qr-code-section">
+                                <img src="${qrCodeUrl}" alt="PayPal QR-Code">
+                                <p style="font-size:13px; font-weight:bold; color:#931177; margin-top:10px;">
+                                    Verwendungszweck:<br>
+                                    "${eventName} - Weißwurst ${datum}"
+                                </p>
+                                <p style="font-size:11px; color:#666;">
+                                    💶 QR scannen → Betrag automatisch vorausgefüllt<br>
+                                    PayPal: paypal.me/${PAYPAL_USERNAME}
+                                </p>
                             </div>
                         `;
-                    });
+                    }
                     
-                    document.getElementById('historie').innerHTML = html;
-                })
-                .catch(e => {
-                    console.error('Fehler beim Laden der Historie:', e);
-                    document.getElementById('historie').innerHTML = 
-                        '<p style="color:red;">Fehler beim Laden der Historie!</p>';
+                    const wurstText = pluralize(w, 'Wurst', 'Würste');
+                    itemsHtml += `
+                        <div class="historie-item">
+                            ${event.Name}: ${w} ${wurstText}, ${b} Brezn (${formatPrice(gesamt)} €)
+                            ${qrCodeHTML}
+                        </div>
+                    `;
                 });
-        }
+                
+                const isOpen = index === 0 ? 'open' : '';
+                const datumId = datum.replace(/\./g, '-').replace(/,/g, '').replace(/\s/g, '-');
+                const wurstSummeText = pluralize(summeW, 'Wurst', 'Würste');
+                
+                html += `
+                    <div class="historie-event">
+                        <div class="historie-header" onclick="toggleHistorieEvent('${datumId}')">
+                            <div class="historie-datum">📅 ${datum}</div>
+                            <div class="historie-toggle ${isOpen}" id="historie-toggle-${datumId}">▼</div>
+                        </div>
+                        <div class="historie-content ${isOpen}" id="historie-content-${datumId}">
+                            ${itemsHtml}
+                            <div class="historie-stats">
+                                Gesamt: ${WURST_ICON} ${summeW} ${wurstSummeText} | 🥨 ${summeB} Brezn | 👥 ${events.length} ${pluralize(events.length, 'Person', 'Personen')} | 💶 ${formatPrice(summeGeld)} €
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('historie').innerHTML = html;
+        })
+        .catch(e => {
+            console.error('Fehler beim Laden der Historie:', e);
+            document.getElementById('historie').innerHTML = 
+                '<p style="color:red;">Fehler beim Laden der Historie!</p>';
+        });
+}
+
         
         function archivieren() {
             const password = document.getElementById('admin-password').value;
@@ -1916,3 +1946,4 @@
     </script>
 </body>
 </html>
+
