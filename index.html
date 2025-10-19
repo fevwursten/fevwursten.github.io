@@ -118,7 +118,12 @@
             margin-top: 15px;
             margin-bottom: 5px;
         }
-        h1, h2 {
+        h1 {
+            text-align: center;
+            color: #6e031b;
+            margin-bottom: 5px;
+        }
+        h2 {
             text-align: center;
             color: #6e031b;
         }
@@ -133,9 +138,10 @@
         }
         .date-subtitle {
             text-align: center;
-            color: #666;
-            font-size: 16px;
-            margin: -10px 0 20px 0;
+            color: #6e031b;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0 0 20px 0;
         }
         .countdown-box {
             background: linear-gradient(135deg, #6e031b 0%, #b9052d 100%);
@@ -161,14 +167,6 @@
         }
         .countdown-special {
             background: linear-gradient(135deg, #931177 0%, #450993 100%);
-        }
-        .deadline-info {
-            background: #e8f4f8;
-            border-left: 4px solid #0087a0;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-            color: #171a51;
         }
         .hidden {
             display: none !important;
@@ -471,16 +469,12 @@
         <div class="date-subtitle" id="datum-titel">Lädt...</div>
         
         <div class="info-badge hidden" id="sonder-info">
-            ⭐ Außerplanmäßiges Event aktiv
+            ⭐ Außerplanmäßiges Event
         </div>
         
         <div class="countdown-box" id="countdown-box">
             <div class="countdown-title">⏰ Zeit bis Bestellende</div>
             <div class="countdown" id="countdown">--:--:--</div>
-        </div>
-        
-        <div class="deadline-info">
-            <strong>Anmeldeschluss:</strong> <span id="deadline-text">Freitag, 09:00 Uhr</span> (MEZ/MESZ - Berlin)
         </div>
         
         <div class="warning hidden" id="deadline-warning">
@@ -686,6 +680,13 @@
         
         function formatPrice(price) {
             return parseFloat(price).toFixed(2).replace('.', ',');
+        }
+        
+        function berechneSenfglaeser(wuerste) {
+            // 30g Senf pro Wurst, 335ml = 335g pro Glas
+            const senfBedarf = wuerste * 30; // in Gramm
+            const glaeser = senfBedarf / 335;
+            return Math.ceil(glaeser); // Aufrunden auf volle Gläser
         }
         
         function updateOrderPreview() {
@@ -932,14 +933,17 @@
                     
                     statusGeladen = true;
                     
+                    // Nur bei außerplanmäßigem Event Badge anzeigen (NICHT bei vorzeitig freigeschaltetem Freitag)
                     if (ausserplanmaessigDeadline) {
                         const eventDatum = new Date(ausserplanmaessigDeadline);
-                        const datumStr = formatiereDatum(eventDatum);
-                        document.getElementById('sonder-info').classList.remove('hidden');
-                        document.getElementById('sonder-info').textContent = `⭐ Außerplanmäßiges Event: ${datumStr.split(',')[0]}`;
-                    } else if (freigeschaltet) {
-                        document.getElementById('sonder-info').classList.remove('hidden');
-                        document.getElementById('sonder-info').textContent = '🔓 Freitagsevent vorzeitig freigeschaltet';
+                        const wochentag = eventDatum.getDay(); // 0=Sonntag, 5=Freitag
+                        
+                        // Nur anzeigen wenn es KEIN Freitag ist
+                        if (wochentag !== 5) {
+                            const datumStr = formatiereDatum(eventDatum);
+                            document.getElementById('sonder-info').classList.remove('hidden');
+                            document.getElementById('sonder-info').textContent = `⭐ Außerplanmäßiges Event: ${datumStr.split(',')[0]}`;
+                        }
                     }
                     
                     updateAdminButtons();
@@ -970,20 +974,29 @@
             const geschlossen = istEventGeschlossen();
             
             if (ausserplanmaessigDeadline) {
-                countdownBox.classList.remove('countdown-expired');
-                countdownBox.classList.add('countdown-special');
-                document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⭐ Außerplanmäßiges Event - Zeit bis Bestellende';
+                const eventDatum = new Date(ausserplanmaessigDeadline);
+                const wochentag = eventDatum.getDay();
+                
+                if (wochentag !== 5) {
+                    // Außerplanmäßiges Event (kein Freitag)
+                    countdownBox.classList.remove('countdown-expired');
+                    countdownBox.classList.add('countdown-special');
+                    document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⭐ Außerplanmäßiges Event - Zeit bis Bestellende';
+                } else {
+                    // Normales Styling für Freitags-Event
+                    countdownBox.classList.remove('countdown-expired', 'countdown-special');
+                    document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⏰ Zeit bis Bestellende';
+                }
                 
                 if (!geschlossen) {
                     document.getElementById('deadline-warning').classList.add('hidden');
                     document.getElementById('form-container').classList.remove('hidden');
                 }
             } else if (freigeschaltet) {
-                countdownBox.classList.remove('countdown-expired');
-                countdownBox.classList.add('countdown-special');
+                countdownBox.classList.remove('countdown-expired', 'countdown-special');
                 document.getElementById('deadline-warning').classList.add('hidden');
                 document.getElementById('form-container').classList.remove('hidden');
-                document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '🔓 Vorzeitig geöffnet - Zeit bis Freitag 09:00';
+                document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⏰ Zeit bis Bestellende';
             } else {
                 countdownBox.classList.remove('countdown-special');
                 document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⏰ Zeit bis Bestellende';
@@ -1032,14 +1045,6 @@
             
             const datumText = formatiereDatum(deadline);
             document.getElementById('datum-titel').textContent = datumText;
-            
-            const deadlineText = deadline.toLocaleDateString('de-DE', { 
-                weekday: 'long', 
-                day: 'numeric', 
-                month: 'long',
-                year: 'numeric'
-            }) + ', 09:00 Uhr';
-            document.getElementById('deadline-text').textContent = deadlineText;
             
             updateCountdown();
             countdownInterval = setInterval(updateCountdown, 1000);
@@ -1409,7 +1414,6 @@
             try {
                 // Prüfung: Mindestens 1 Wurst ODER 1 Breze bei neuer Bestellung
                 if (w === 0 && b === 0) {
-                    // Prüfe ob bereits Bestellung existiert
                     const checkResponse = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
                     const checkData = await checkResponse.json();
                     
@@ -1418,7 +1422,6 @@
                         const orderData = await orderResponse.json();
                         
                         if (!orderData.success || !orderData.hasOrder) {
-                            // Neue Bestellung mit 0/0 nicht erlaubt
                             document.getElementById('error').textContent = '✗ Bitte mindestens 1 Wurst oder 1 Breze bestellen!';
                             document.getElementById('error').style.display = 'block';
                             setTimeout(() => {
@@ -1428,9 +1431,7 @@
                             submitBtn.textContent = 'Jetzt bestellen';
                             return;
                         }
-                        // Else: Update auf 0/0 ist erlaubt (Abmeldung)
                     } else {
-                        // Neuer User mit 0/0 nicht erlaubt
                         document.getElementById('error').textContent = '✗ Bitte mindestens 1 Wurst oder 1 Breze bestellen!';
                         document.getElementById('error').style.display = 'block';
                         setTimeout(() => {
@@ -1447,7 +1448,6 @@
                 const loginData = await loginResponse.json();
                 
                 if (loginData.success) {
-                    // User existiert und Login erfolgreich
                     if (loginData.requirePasswordReset === 'true') {
                         document.getElementById('error').textContent = '✗ Du musst erst ein Passwort setzen! Kontaktiere den Admin.';
                         document.getElementById('error').style.display = 'block';
@@ -1459,12 +1459,10 @@
                         return;
                     }
                     
-                    // Prüfe ob bereits Bestellung vorhanden
                     const orderResponse = await fetch(`${APPS_SCRIPT_URL}?action=getMyOrder&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
                     const orderData = await orderResponse.json();
                     
                     if (orderData.success && orderData.hasOrder) {
-                        // Bestellung vorhanden - Update-Bestätigung
                         const updateConfirmed = await zeigeUpdateModal(
                             orderData.wuerste, 
                             orderData.brezn, 
@@ -1479,7 +1477,6 @@
                         }
                     }
                     
-                    // Bestellung erstellen/updaten
                     const createResponse = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${wuerste}&brezn=${brezn}&preisWurst=${currentPreisWurst}&preisBreze=${currentPreisBreze}`);
                     const createData = await createResponse.json();
                     
@@ -1488,7 +1485,6 @@
                         document.getElementById('success').style.display = 'block';
                         document.getElementById('error').style.display = 'none';
                         
-                        // Formular leeren (Auto-Logout)
                         document.getElementById('order-form').reset();
                         document.getElementById('wuerste').value = 0;
                         document.getElementById('brezn').value = 0;
@@ -1507,12 +1503,10 @@
                     }
                     
                 } else if (loginData.error === 'user_not_found') {
-                    // Neuer User - Account erstellen
                     const registerResponse = await fetch(`${APPS_SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
                     const registerData = await registerResponse.json();
                     
                     if (registerData.success) {
-                        // Bestellung erstellen
                         const createResponse = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${wuerste}&brezn=${brezn}&preisWurst=${currentPreisWurst}&preisBreze=${currentPreisBreze}`);
                         const createData = await createResponse.json();
                         
@@ -1521,7 +1515,6 @@
                             document.getElementById('success').style.display = 'block';
                             document.getElementById('error').style.display = 'none';
                             
-                            // Formular leeren
                             document.getElementById('order-form').reset();
                             document.getElementById('wuerste').value = 0;
                             document.getElementById('brezn').value = 0;
@@ -1623,10 +1616,15 @@
                     }
                     
                     document.getElementById('liste').innerHTML = html;
+                    
                     const wurstSummeText = pluralize(summeW, 'Wurst', 'Würste');
                     const gesamtGeld = summeGeldW + summeGeldB;
+                    const senfglaeser = berechneSenfglaeser(summeW);
+                    const senfText = pluralize(senfglaeser, 'Glas', 'Gläser');
+                    
                     document.getElementById('summe').innerHTML = 
-                        `🥖 ${summeW} ${wurstSummeText} (${formatPrice(summeGeldW)} €) | 🥨 ${summeB} Brezn (${formatPrice(summeGeldB)} €) | 💶 ${formatPrice(gesamtGeld)} €`;
+                        `🥖 ${summeW} ${wurstSummeText} (${formatPrice(summeGeldW)} €) | 🥨 ${summeB} Brezn (${formatPrice(summeGeldB)} €)<br>` +
+                        `🍯 ${senfglaeser} ${senfText} Senf (335ml) | 💶 ${formatPrice(gesamtGeld)} €`;
                 })
                 .catch(e => {
                     console.error('Fehler beim Laden:', e);
