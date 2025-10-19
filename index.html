@@ -1655,7 +1655,7 @@
                             let qrCodeHTML = '';
                             if (geschlossen && gesamt > 0) {
                                 const betragPayPal = gesamt.toFixed(2).replace(',', '.');
-                                const paypalLink = `https://paypal.me/${PAYPAL_USERNAME}/${betragPayPal}?locale.x=de_DE`;
+                                const paypalLink = `https://paypal.me/${PAYPAL_USERNAME}/${betragPayPal}`;
                                 const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(paypalLink)}`;
                                 
                                 qrCodeHTML = `
@@ -1946,4 +1946,5 @@ function ladeHistorie() {
     </script>
 </body>
 </html>
+
 
