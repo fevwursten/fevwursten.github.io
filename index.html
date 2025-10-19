@@ -44,13 +44,6 @@
             cursor: not-allowed;
             background: #999 !important;
         }
-        button.edit {
-            background: #0087a0;
-        }
-        button.edit:hover {
-            background: #0087a0;
-            filter: brightness(1.1);
-        }
         button.admin {
             background: #e67319;
         }
@@ -64,12 +57,6 @@
         button.admin-success:hover {
             background: #931177;
             filter: brightness(1.1);
-        }
-        button.secondary {
-            background: #6e031b;
-        }
-        button.secondary:hover {
-            background: #931177;
         }
         .order {
             background: #f9f9f9;
@@ -505,65 +492,35 @@
             <div id="success" class="success">✓ Bestellung erfolgreich!</div>
             <div id="error" class="error">✗ Fehler beim Senden!</div>
             
-            <!-- Einheitliches Login/Register Form -->
-            <div id="auth-form-container">
-                <h3>Anmelden</h3>
-                <p class="help-text">Gib deinen Namen und optional ein Passwort ein.</p>
-                
-                <form id="auth-form">
-                    <label>Name: *</label>
-                    <input type="text" id="auth-name" required placeholder="Max Mustermann" autocomplete="username">
-                    
-                    <label>Passwort: (optional)</label>
-                    <input type="password" id="auth-passwort" placeholder="" autocomplete="current-password">
-                    
-                    <button type="submit">Weiter</button>
-                </form>
+            <h3>Jetzt bestellen</h3>
+            
+            <div class="price-info">
+                <strong>Aktuelle Preise:</strong><br>
+                🥖 Weißwurst: <span id="display-preis-wurst">2,50</span> €<br>
+                🥨 Breze: <span id="display-preis-breze">1,50</span> €
             </div>
             
-            <!-- Passwort-Setz-Dialog -->
-            <div id="password-set-container" class="hidden">
-                <h3>Passwort setzen</h3>
-                <p class="help-text">Der Admin hat angefordert, dass du ein Passwort setzt.</p>
+            <form id="order-form">
+                <label>Dein Name: *</label>
+                <input type="text" id="name" required placeholder="Max Mustermann" autocomplete="username">
                 
-                <form id="password-set-form">
-                    <label>Neues Passwort: *</label>
-                    <input type="password" id="new-password" required placeholder="Mindestens 4 Zeichen" minlength="4">
-                    
-                    <label>Passwort wiederholen: *</label>
-                    <input type="password" id="new-password-confirm" required placeholder="Passwort bestätigen" minlength="4">
-                    
-                    <button type="submit">Passwort speichern</button>
-                </form>
-            </div>
-            
-            <!-- Bestellformular (nach Login) -->
-            <div id="order-form-container" class="hidden">
-                <h3>Deine Bestellung</h3>
-                <p class="help-text">Angemeldet als: <strong id="logged-in-user"></strong></p>
+                <label>Passwort:</label>
+                <input type="password" id="passwort" placeholder="Optional" autocomplete="current-password">
+                <p class="help-text">Optional: Bei deiner ersten Bestellung kannst du ein Passwort vergeben, um deine Bestellung später zu ändern.</p>
                 
-                <div class="price-info">
-                    <strong>Aktuelle Preise:</strong><br>
-                    🥖 Weißwurst: <span id="display-preis-wurst">2,50</span> €<br>
-                    🥨 Breze: <span id="display-preis-breze">1,50</span> €
+                <label>Anzahl Weißwürste: *</label>
+                <input type="number" id="wuerste" value="0" min="0" max="50" required>
+                
+                <label>Anzahl Brezn: *</label>
+                <input type="number" id="brezn" value="0" min="0" max="50" required>
+                
+                <div class="price-info" id="order-total-preview" style="margin-top: 15px;">
+                    <strong>Vorschau:</strong><br>
+                    <span id="order-preview-text">Bitte Mengen eingeben</span>
                 </div>
                 
-                <form id="order-form">
-                    <label>Anzahl Weißwürste: *</label>
-                    <input type="number" id="wuerste" value="0" min="0" max="50" required>
-                    
-                    <label>Anzahl Brezn: *</label>
-                    <input type="number" id="brezn" value="0" min="0" max="50" required>
-                    
-                    <div class="price-info" id="order-total-preview" style="margin-top: 15px;">
-                        <strong>Vorschau:</strong><br>
-                        <span id="order-preview-text">Bitte Mengen eingeben</span>
-                    </div>
-                    
-                    <button type="submit" id="order-submit-btn">Bestellung absenden</button>
-                    <button type="button" onclick="logout()" class="secondary" style="margin-top: 5px;">Abmelden</button>
-                </form>
-            </div>
+                <button type="submit" id="order-submit-btn">Jetzt bestellen</button>
+            </form>
         </div>
     </div>
     
@@ -697,21 +654,29 @@
         </div>
     </div>
 
+    <div id="update-modal" class="modal">
+        <div class="modal-content">
+            <h3>Bestellung aktualisieren?</h3>
+            <p id="update-modal-text">Du hast bereits bestellt.</p>
+            <div class="modal-buttons">
+                <button onclick="schliesseUpdateModal(false)" style="background: #999;">Abbrechen</button>
+                <button onclick="schliesseUpdateModal(true)" class="admin-success">Aktualisieren</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdmOwK3MeR__gaScFtslQO0jfHoJhi4nzISR2l26CmSMQKCh8BxQ0gcmMq7izQiq0rng/exec';
         
-        let loggedInUser = null;
-        let loggedInPasswordHash = null;
-        let pendingPasswordSetUser = null;
         let countdownInterval = null;
         let archivierungsDatum = null;
         let ausserplanmaessigDeadline = null;
         let freigeschaltet = false;
         let statusGeladen = false;
         let historieData = [];
-        let hasExistingOrder = false;
         let currentPreisWurst = 2.50;
         let currentPreisBreze = 1.50;
+        let updateModalResolve = null;
         
         const EMPTY_PASSWORD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
         
@@ -739,85 +704,75 @@
                 `<strong>Gesamt: ${formatPrice(gesamt)} €</strong>`;
         }
         
-function ladePreise() {
-    fetch(`${APPS_SCRIPT_URL}?type=preise`)
-        .then(r => r.json())
-        .then(data => {
-            console.log('Raw data:', data); // NEU
-            console.log('Geladene Preise:', data.preisWurst, data.preisBreze); // NEU
-            
-            if (data.success) {
-                currentPreisWurst = data.preisWurst;
-                currentPreisBreze = data.preisBreze;
-                
-                console.log('currentPreisWurst:', currentPreisWurst); // NEU
-                console.log('currentPreisBreze:', currentPreisBreze); // NEU
-                
-                document.getElementById('display-preis-wurst').textContent = formatPrice(currentPreisWurst);
-                document.getElementById('display-preis-breze').textContent = formatPrice(currentPreisBreze);
-                
-                document.getElementById('admin-preis-wurst').value = currentPreisWurst.toFixed(2);
-                document.getElementById('admin-preis-breze').value = currentPreisBreze.toFixed(2);
-                
-                updateOrderPreview();
-            }
-        })
-        .catch(e => {
-            console.error('Fehler beim Laden der Preise:', e);
-        });
-}
-
+        function ladePreise() {
+            fetch(`${APPS_SCRIPT_URL}?type=preise`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        currentPreisWurst = data.preisWurst;
+                        currentPreisBreze = data.preisBreze;
+                        
+                        document.getElementById('display-preis-wurst').textContent = formatPrice(currentPreisWurst);
+                        document.getElementById('display-preis-breze').textContent = formatPrice(currentPreisBreze);
+                        
+                        document.getElementById('admin-preis-wurst').value = currentPreisWurst.toFixed(2);
+                        document.getElementById('admin-preis-breze').value = currentPreisBreze.toFixed(2);
+                        
+                        updateOrderPreview();
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler beim Laden der Preise:', e);
+                });
+        }
         
-function speicherePreise() {
-    const password = document.getElementById('admin-password').value;
-    
-    if (!password) {
-        alert('Bitte Admin-Passwort eingeben!');
-        return;
-    }
-    
-    let preisWurst = document.getElementById('admin-preis-wurst').value;
-    let preisBreze = document.getElementById('admin-preis-breze').value;
-    
-    if (!preisWurst || !preisBreze) {
-        alert('Bitte beide Preise eingeben!');
-        return;
-    }
-    
-    // Komma zu Punkt konvertieren für beide Preise
-    preisWurst = preisWurst.replace(',', '.');
-    preisBreze = preisBreze.replace(',', '.');
-    
-    // Validiere dass es Zahlen sind
-    if (isNaN(parseFloat(preisWurst)) || isNaN(parseFloat(preisBreze))) {
-        alert('Bitte gültige Preise eingeben!');
-        return;
-    }
-    
-    fetch(`${APPS_SCRIPT_URL}?action=setPreise&adminPassword=${encodeURIComponent(password)}&preisWurst=${preisWurst}&preisBreze=${preisBreze}`)
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('admin-success').textContent = '✓ Preise aktualisiert!';
-                document.getElementById('admin-success').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('admin-success').style.display = 'none';
-                }, 3000);
-                
-                ladePreise();
-            } else {
-                document.getElementById('admin-error').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('admin-error').style.display = 'none';
-                }, 5000);
+        function speicherePreise() {
+            const password = document.getElementById('admin-password').value;
+            
+            if (!password) {
+                alert('Bitte Admin-Passwort eingeben!');
+                return;
             }
-        })
-        .catch(e => {
-            console.error('Fehler:', e);
-            document.getElementById('admin-error').style.display = 'block';
-        });
-}
-
+            
+            let preisWurst = document.getElementById('admin-preis-wurst').value;
+            let preisBreze = document.getElementById('admin-preis-breze').value;
+            
+            if (!preisWurst || !preisBreze) {
+                alert('Bitte beide Preise eingeben!');
+                return;
+            }
+            
+            preisWurst = preisWurst.replace(',', '.');
+            preisBreze = preisBreze.replace(',', '.');
+            
+            if (isNaN(parseFloat(preisWurst)) || isNaN(parseFloat(preisBreze))) {
+                alert('Bitte gültige Preise eingeben!');
+                return;
+            }
+            
+            fetch(`${APPS_SCRIPT_URL}?action=setPreise&adminPassword=${encodeURIComponent(password)}&preisWurst=${preisWurst}&preisBreze=${preisBreze}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('admin-success').textContent = '✓ Preise aktualisiert!';
+                        document.getElementById('admin-success').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('admin-success').style.display = 'none';
+                        }, 3000);
+                        
+                        ladePreise();
+                    } else {
+                        document.getElementById('admin-error').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('admin-error').style.display = 'none';
+                        }, 5000);
+                    }
+                })
+                .catch(e => {
+                    console.error('Fehler:', e);
+                    document.getElementById('admin-error').style.display = 'block';
+                });
+        }
         
         function getAktuellerFreitagZeitraum() {
             const jetzt = getBerlinTime();
@@ -883,23 +838,6 @@ function speicherePreise() {
             }
         }
         
-        function logout() {
-            loggedInUser = null;
-            loggedInPasswordHash = null;
-            pendingPasswordSetUser = null;
-            hasExistingOrder = false;
-            document.getElementById('order-form-container').classList.add('hidden');
-            document.getElementById('password-set-container').classList.add('hidden');
-            document.getElementById('auth-form-container').classList.remove('hidden');
-            document.getElementById('order-form').reset();
-            document.getElementById('auth-form').reset();
-            document.getElementById('wuerste').value = 0;
-            document.getElementById('brezn').value = 0;
-            document.getElementById('order-submit-btn').textContent = 'Bestellung absenden';
-            updateOrderPreview();
-        }
-        
-        // Event Listeners für Live-Preview
         document.addEventListener('DOMContentLoaded', function() {
             const wursteInput = document.getElementById('wuerste');
             const breznInput = document.getElementById('brezn');
@@ -1416,196 +1354,27 @@ function speicherePreise() {
                 });
         }
         
-        // Lade bestehende Bestellung nach Login
-        function ladeBestehendeBestellung() {
-            if (!loggedInUser || !loggedInPasswordHash) return;
-            
-            fetch(`${APPS_SCRIPT_URL}?action=getMyOrder&name=${encodeURIComponent(loggedInUser)}&hash=${encodeURIComponent(loggedInPasswordHash)}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success && data.hasOrder) {
-                        hasExistingOrder = true;
-                        document.getElementById('wuerste').value = data.wuerste || 0;
-                        document.getElementById('brezn').value = data.brezn || 0;
-                        document.getElementById('order-submit-btn').textContent = 'Bestellung aktualisieren';
-                        updateOrderPreview();
-                    } else {
-                        hasExistingOrder = false;
-                        document.getElementById('wuerste').value = 0;
-                        document.getElementById('brezn').value = 0;
-                        document.getElementById('order-submit-btn').textContent = 'Bestellung absenden';
-                        updateOrderPreview();
-                    }
-                })
-                .catch(e => {
-                    console.error('Fehler beim Laden der Bestellung:', e);
-                });
+        function schliesseUpdateModal(update) {
+            document.getElementById('update-modal').style.display = 'none';
+            if (updateModalResolve) {
+                updateModalResolve(update);
+                updateModalResolve = null;
+            }
         }
         
-        document.getElementById('auth-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            
-            if (istEventGeschlossen()) {
-                alert('Event wurde geschlossen!');
-                return;
-            }
-            
-            const name = document.getElementById('auth-name').value.trim();
-            const passwort = (document.getElementById('auth-passwort').value || '').trim();
-            const passwortHash = await hashPassword(passwort);
-            
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Wird geprüft...';
-            
-            fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        if (data.requirePasswordReset === 'true') {
-                            pendingPasswordSetUser = data.name;
-                            document.getElementById('auth-form-container').classList.add('hidden');
-                            document.getElementById('password-set-container').classList.remove('hidden');
-                            document.getElementById('auth-form').reset();
-                        } else {
-                            loggedInUser = data.name;
-                            loggedInPasswordHash = passwortHash;
-                            document.getElementById('logged-in-user').textContent = data.name;
-                            document.getElementById('auth-form-container').classList.add('hidden');
-                            document.getElementById('order-form-container').classList.remove('hidden');
-                            document.getElementById('auth-form').reset();
-                            
-                            ladeBestehendeBestellung();
-                        }
-                    } else if (data.error === 'user_not_found') {
-                        const registrieren = confirm(`Der Benutzer "${name}" existiert noch nicht.\n\nMöchtest du einen neuen Account anlegen?`);
-                        
-                        if (registrieren) {
-                            fetch(`${APPS_SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`)
-                                .then(r => r.json())
-                                .then(regData => {
-                                    if (regData.success) {
-                                        loggedInUser = name;
-                                        loggedInPasswordHash = passwortHash;
-                                        document.getElementById('logged-in-user').textContent = name;
-                                        document.getElementById('auth-form-container').classList.add('hidden');
-                                        document.getElementById('order-form-container').classList.remove('hidden');
-                                        
-                                        document.getElementById('success').textContent = '✓ Account erstellt! Jetzt kannst du bestellen.';
-                                        document.getElementById('success').style.display = 'block';
-                                        setTimeout(() => {
-                                            document.getElementById('success').style.display = 'none';
-                                        }, 5000);
-                                        
-                                        document.getElementById('auth-form').reset();
-                                        
-                                        ladeBestehendeBestellung();
-                                    } else {
-                                        document.getElementById('error').textContent = regData.message || '✗ Dieser Name ist bereits vergeben!';
-                                        document.getElementById('error').style.display = 'block';
-                                        setTimeout(() => {
-                                            document.getElementById('error').style.display = 'none';
-                                        }, 5000);
-                                    }
-                                })
-                                .catch(e => {
-                                    console.error('Registrierungsfehler:', e);
-                                    document.getElementById('error').textContent = '✗ Verbindungsfehler bei der Registrierung!';
-                                    document.getElementById('error').style.display = 'block';
-                                    setTimeout(() => {
-                                        document.getElementById('error').style.display = 'none';
-                                    }, 5000);
-                                });
-                        } else {
-                            document.getElementById('error').textContent = '✗ Bitte gib einen registrierten Namen ein.';
-                            document.getElementById('error').style.display = 'block';
-                            setTimeout(() => {
-                                document.getElementById('error').style.display = 'none';
-                            }, 5000);
-                        }
-                    } else if (data.error === 'wrong_password') {
-                        document.getElementById('error').textContent = '✗ Falsches Passwort!';
-                        document.getElementById('error').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('error').style.display = 'none';
-                        }, 5000);
-                    } else {
-                        document.getElementById('error').textContent = data.message || '✗ Login fehlgeschlagen!';
-                        document.getElementById('error').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('error').style.display = 'none';
-                        }, 5000);
-                    }
-                })
-                .catch(e => {
-                    console.error('Fehler:', e);
-                    document.getElementById('error').textContent = '✗ Verbindungsfehler!';
-                    document.getElementById('error').style.display = 'block';
-                    setTimeout(() => {
-                        document.getElementById('error').style.display = 'none';
-                    }, 5000);
-                })
-                .finally(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Weiter';
-                });
-        });
+        function zeigeUpdateModal(altW, altB, neuW, neuB) {
+            return new Promise((resolve) => {
+                updateModalResolve = resolve;
+                const altWurstText = pluralize(altW, 'Wurst', 'Würste');
+                const neuWurstText = pluralize(neuW, 'Wurst', 'Würste');
+                document.getElementById('update-modal-text').innerHTML = 
+                    `Du hast bereits <strong>${altW} ${altWurstText}, ${altB} Brezn</strong> bestellt.<br><br>` +
+                    `Auf <strong>${neuW} ${neuWurstText}, ${neuB} Brezn</strong> ändern?`;
+                document.getElementById('update-modal').style.display = 'block';
+            });
+        }
         
-        document.getElementById('password-set-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            
-            const pw1 = document.getElementById('new-password').value.trim();
-            const pw2 = document.getElementById('new-password-confirm').value.trim();
-            
-            if (pw1 !== pw2) {
-                document.getElementById('error').textContent = '✗ Passwörter stimmen nicht überein!';
-                document.getElementById('error').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('error').style.display = 'none';
-                }, 5000);
-                return;
-            }
-            
-            const newHash = await hashPassword(pw1);
-            
-            fetch(`${APPS_SCRIPT_URL}?action=setPassword&name=${encodeURIComponent(pendingPasswordSetUser)}&hash=${encodeURIComponent(newHash)}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        loggedInUser = pendingPasswordSetUser;
-                        loggedInPasswordHash = newHash;
-                        document.getElementById('logged-in-user').textContent = pendingPasswordSetUser;
-                        document.getElementById('password-set-container').classList.add('hidden');
-                        document.getElementById('order-form-container').classList.remove('hidden');
-                        document.getElementById('password-set-form').reset();
-                        
-                        document.getElementById('success').textContent = '✓ Passwort gesetzt!';
-                        document.getElementById('success').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('success').style.display = 'none';
-                        }, 5000);
-                        
-                        pendingPasswordSetUser = null;
-                        
-                        ladeBestehendeBestellung();
-                    } else {
-                        document.getElementById('error').textContent = '✗ Fehler beim Speichern!';
-                        document.getElementById('error').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('error').style.display = 'none';
-                        }, 5000);
-                    }
-                })
-                .catch(e => {
-                    console.error('Fehler:', e);
-                    document.getElementById('error').textContent = '✗ Verbindungsfehler!';
-                    document.getElementById('error').style.display = 'block';
-                    setTimeout(() => {
-                        document.getElementById('error').style.display = 'none';
-                    }, 5000);
-                });
-        });
-        
+        // ONE-STEP ORDER FORM
         document.getElementById('order-form').addEventListener('submit', async e => {
             e.preventDefault();
             
@@ -1614,135 +1383,207 @@ function speicherePreise() {
                 return;
             }
             
-            if (!loggedInUser || !loggedInPasswordHash) {
-                alert('Bitte erst anmelden!');
-                return;
-            }
-            
             const submitBtn = e.target.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Wird gesendet...';
+            submitBtn.textContent = 'Wird verarbeitet...';
             
+            const name = document.getElementById('name').value.trim();
+            const passwort = (document.getElementById('passwort').value || '').trim();
             const wuerste = document.getElementById('wuerste').value;
             const brezn = document.getElementById('brezn').value;
+            const passwortHash = await hashPassword(passwort);
             
-            fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(loggedInUser)}&hash=${encodeURIComponent(loggedInPasswordHash)}&wuerste=${wuerste}&brezn=${brezn}&preisWurst=${currentPreisWurst}&preisBreze=${currentPreisBreze}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        if (data.updated) {
-                            document.getElementById('success').textContent = '✓ Bestellung aktualisiert!';
-                            document.getElementById('order-submit-btn').textContent = 'Bestellung aktualisieren';
-                        } else {
-                            document.getElementById('success').textContent = '✓ Bestellung erstellt!';
-                            document.getElementById('order-submit-btn').textContent = 'Bestellung aktualisieren';
-                        }
+            try {
+                // 1. Prüfe ob User existiert (Login)
+                const loginResponse = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
+                const loginData = await loginResponse.json();
+                
+                if (loginData.success) {
+                    // User existiert und Login erfolgreich
+                    if (loginData.requirePasswordReset === 'true') {
+                        document.getElementById('error').textContent = '✗ Du musst erst ein Passwort setzen! Kontaktiere den Admin.';
+                        document.getElementById('error').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('error').style.display = 'none';
+                        }, 5000);
+                        return;
+                    }
+                    
+                    // Prüfe ob bereits Bestellung vorhanden
+                    const orderResponse = await fetch(`${APPS_SCRIPT_URL}?action=getMyOrder&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
+                    const orderData = await orderResponse.json();
+                    
+                    if (orderData.success && orderData.hasOrder) {
+                        // Bestellung vorhanden - Update-Bestätigung
+                        const updateConfirmed = await zeigeUpdateModal(
+                            orderData.wuerste, 
+                            orderData.brezn, 
+                            wuerste, 
+                            brezn
+                        );
                         
+                        if (!updateConfirmed) {
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'Jetzt bestellen';
+                            return;
+                        }
+                    }
+                    
+                    // Bestellung erstellen/updaten
+                    const createResponse = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${wuerste}&brezn=${brezn}&preisWurst=${currentPreisWurst}&preisBreze=${currentPreisBreze}`);
+                    const createData = await createResponse.json();
+                    
+                    if (createData.success) {
+                        document.getElementById('success').textContent = createData.updated ? '✓ Bestellung aktualisiert!' : '✓ Bestellung erfolgreich!';
                         document.getElementById('success').style.display = 'block';
                         document.getElementById('error').style.display = 'none';
                         
-                        hasExistingOrder = true;
+                        // Formular leeren (Auto-Logout)
+                        document.getElementById('order-form').reset();
+                        document.getElementById('wuerste').value = 0;
+                        document.getElementById('brezn').value = 0;
+                        updateOrderPreview();
                         
                         setTimeout(() => {
                             document.getElementById('success').style.display = 'none';
                             laden();
                         }, 5000);
                     } else {
-                        document.getElementById('error').textContent = data.message || '✗ Fehler!';
+                        document.getElementById('error').textContent = '✗ Fehler beim Speichern!';
                         document.getElementById('error').style.display = 'block';
                         setTimeout(() => {
                             document.getElementById('error').style.display = 'none';
                         }, 5000);
                     }
-                })
-                .catch(e => {
-                    console.error('Fehler:', e);
-                    document.getElementById('error').textContent = '✗ Verbindungsfehler!';
+                    
+                } else if (loginData.error === 'user_not_found') {
+                    // Neuer User - Account erstellen
+                    const registerResponse = await fetch(`${APPS_SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
+                    const registerData = await registerResponse.json();
+                    
+                    if (registerData.success) {
+                        // Bestellung erstellen
+                        const createResponse = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${wuerste}&brezn=${brezn}&preisWurst=${currentPreisWurst}&preisBreze=${currentPreisBreze}`);
+                        const createData = await createResponse.json();
+                        
+                        if (createData.success) {
+                            document.getElementById('success').textContent = '✓ Bestellung erfolgreich!';
+                            document.getElementById('success').style.display = 'block';
+                            document.getElementById('error').style.display = 'none';
+                            
+                            // Formular leeren
+                            document.getElementById('order-form').reset();
+                            document.getElementById('wuerste').value = 0;
+                            document.getElementById('brezn').value = 0;
+                            updateOrderPreview();
+                            
+                            setTimeout(() => {
+                                document.getElementById('success').style.display = 'none';
+                                laden();
+                            }, 5000);
+                        }
+                    } else {
+                        document.getElementById('error').textContent = '✗ ' + (registerData.message || 'Registrierung fehlgeschlagen!');
+                        document.getElementById('error').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('error').style.display = 'none';
+                        }, 5000);
+                    }
+                    
+                } else if (loginData.error === 'wrong_password') {
+                    document.getElementById('error').textContent = '✗ Falsches Passwort!';
                     document.getElementById('error').style.display = 'block';
                     setTimeout(() => {
                         document.getElementById('error').style.display = 'none';
                     }, 5000);
-                })
-                .finally(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = hasExistingOrder ? 'Bestellung aktualisieren' : 'Bestellung absenden';
-                });
+                } else {
+                    document.getElementById('error').textContent = '✗ ' + (loginData.message || 'Fehler!');
+                    document.getElementById('error').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('error').style.display = 'none';
+                    }, 5000);
+                }
+                
+            } catch (e) {
+                console.error('Fehler:', e);
+                document.getElementById('error').textContent = '✗ Verbindungsfehler!';
+                document.getElementById('error').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('error').style.display = 'none';
+                }, 5000);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Jetzt bestellen';
+            }
         });
         
-function laden() {
-    fetch(APPS_SCRIPT_URL)
-        .then(r => r.json())
-        .then(data => {
-            let html = '';
-            let summeW = 0;
-            let summeB = 0;
-            let summeGeldW = 0;
-            let summeGeldB = 0;
-            
-            if (data && data.length > 0) {
-                data.forEach(d => {
-                    const w = parseInt(d.Wuerste) || 0;
-                    const b = parseInt(d.Brezn) || 0;
+        function laden() {
+            fetch(APPS_SCRIPT_URL)
+                .then(r => r.json())
+                .then(data => {
+                    let html = '';
+                    let summeW = 0;
+                    let summeB = 0;
+                    let summeGeldW = 0;
+                    let summeGeldB = 0;
                     
-                    // Preise SUPER-robust parsen
-                    let pW = 0;
-                    let pB = 0;
-                    
-                    try {
-                        if (d.PreisWurst !== undefined && d.PreisWurst !== null && d.PreisWurst !== '') {
-                            // Alles zu String, dann Komma zu Punkt, dann parseFloat
-                            const pwStr = String(d.PreisWurst).trim().replace(',', '.');
-                            pW = parseFloat(pwStr);
-                            if (isNaN(pW)) pW = 0;
-                        }
-                    } catch(e) {
-                        console.error('Fehler PreisWurst:', d.PreisWurst, e);
-                        pW = 0;
+                    if (data && data.length > 0) {
+                        data.forEach(d => {
+                            const w = parseInt(d.Wuerste) || 0;
+                            const b = parseInt(d.Brezn) || 0;
+                            
+                            let pW = 0;
+                            let pB = 0;
+                            
+                            try {
+                                if (d.PreisWurst !== undefined && d.PreisWurst !== null && d.PreisWurst !== '') {
+                                    const pwStr = String(d.PreisWurst).trim().replace(',', '.');
+                                    pW = parseFloat(pwStr);
+                                    if (isNaN(pW)) pW = 0;
+                                }
+                            } catch(e) {
+                                pW = 0;
+                            }
+                            
+                            try {
+                                if (d.PreisBreze !== undefined && d.PreisBreze !== null && d.PreisBreze !== '') {
+                                    const pbStr = String(d.PreisBreze).trim().replace(',', '.');
+                                    pB = parseFloat(pbStr);
+                                    if (isNaN(pB)) pB = 0;
+                                }
+                            } catch(e) {
+                                pB = 0;
+                            }
+                            
+                            const gesamt = (w * pW) + (b * pB);
+                            
+                            summeW += w;
+                            summeB += b;
+                            summeGeldW += (w * pW);
+                            summeGeldB += (b * pB);
+                            
+                            const wurstText = pluralize(w, 'Wurst', 'Würste');
+                            html += `<div class="order">
+                                <b>${d.Name || 'Unbekannt'}</b>: ${w} ${wurstText}, ${b} Brezn
+                                <div class="order-price">Gesamt: ${formatPrice(gesamt)} €</div>
+                            </div>`;
+                        });
+                    } else {
+                        html = '<p>Noch keine Bestellungen</p>';
                     }
                     
-                    try {
-                        if (d.PreisBreze !== undefined && d.PreisBreze !== null && d.PreisBreze !== '') {
-                            const pbStr = String(d.PreisBreze).trim().replace(',', '.');
-                            pB = parseFloat(pbStr);
-                            if (isNaN(pB)) pB = 0;
-                        }
-                    } catch(e) {
-                        console.error('Fehler PreisBreze:', d.PreisBreze, e);
-                        pB = 0;
-                    }
-                    
-                    console.log(`${d.Name}: w=${w}, b=${b}, pW=${pW}, pB=${pB}`); // DEBUG
-                    
-                    const gesamt = (w * pW) + (b * pB);
-                    
-                    summeW += w;
-                    summeB += b;
-                    summeGeldW += (w * pW);
-                    summeGeldB += (b * pB);
-                    
-                    const wurstText = pluralize(w, 'Wurst', 'Würste');
-                    html += `<div class="order">
-                        <b>${d.Name || 'Unbekannt'}</b>: ${w} ${wurstText}, ${b} Brezn
-                        <div class="order-price">Gesamt: ${formatPrice(gesamt)} €</div>
-                    </div>`;
+                    document.getElementById('liste').innerHTML = html;
+                    const wurstSummeText = pluralize(summeW, 'Wurst', 'Würste');
+                    const gesamtGeld = summeGeldW + summeGeldB;
+                    document.getElementById('summe').innerHTML = 
+                        `🥖 ${summeW} ${wurstSummeText} (${formatPrice(summeGeldW)} €) | 🥨 ${summeB} Brezn (${formatPrice(summeGeldB)} €) | 💶 ${formatPrice(gesamtGeld)} €`;
+                })
+                .catch(e => {
+                    console.error('Fehler beim Laden:', e);
+                    document.getElementById('liste').innerHTML = 
+                        '<p style="color:red;">Fehler beim Laden!</p>';
                 });
-            } else {
-                html = '<p>Noch keine Bestellungen</p>';
-            }
-            
-            document.getElementById('liste').innerHTML = html;
-            const wurstSummeText = pluralize(summeW, 'Wurst', 'Würste');
-            const gesamtGeld = summeGeldW + summeGeldB;
-            document.getElementById('summe').innerHTML = 
-                `🥖 ${summeW} ${wurstSummeText} (${formatPrice(summeGeldW)} €) | 🥨 ${summeB} Brezn (${formatPrice(summeGeldB)} €) | 💶 ${formatPrice(gesamtGeld)} €`;
-        })
-        .catch(e => {
-            console.error('Fehler beim Laden:', e);
-            document.getElementById('liste').innerHTML = 
-                '<p style="color:red;">Fehler beim Laden!</p>';
-        });
-}
-
+        }
         
         function ladeHistorie() {
             fetch(`${APPS_SCRIPT_URL}?type=historie`)
@@ -1803,15 +1644,19 @@ function laden() {
                             const w = parseInt(event.Wuerste) || 0;
                             const b = parseInt(event.Brezn) || 0;
                             
-                            // Preise sicher als Float parsen
                             let pW = 0;
                             let pB = 0;
                             
-                            if (event.PreisWurst !== undefined && event.PreisWurst !== null && event.PreisWurst !== '') {
-                                pW = parseFloat(String(event.PreisWurst).replace(',', '.')) || 0;
-                            }
-                            if (event.PreisBreze !== undefined && event.PreisBreze !== null && event.PreisBreze !== '') {
-                                pB = parseFloat(String(event.PreisBreze).replace(',', '.')) || 0;
+                            try {
+                                if (event.PreisWurst !== undefined && event.PreisWurst !== null && event.PreisWurst !== '') {
+                                    pW = parseFloat(String(event.PreisWurst).replace(',', '.')) || 0;
+                                }
+                                if (event.PreisBreze !== undefined && event.PreisBreze !== null && event.PreisBreze !== '') {
+                                    pB = parseFloat(String(event.PreisBreze).replace(',', '.')) || 0;
+                                }
+                            } catch(e) {
+                                pW = 0;
+                                pB = 0;
                             }
                             
                             const gesamt = (w * pW) + (b * pB);
@@ -1942,9 +1787,13 @@ function laden() {
         }
         
         window.onclick = function(event) {
-            const modal = document.getElementById('ausserplanmaessig-modal');
-            if (event.target === modal) {
+            const modal1 = document.getElementById('ausserplanmaessig-modal');
+            const modal2 = document.getElementById('update-modal');
+            if (event.target === modal1) {
                 schliesseModal();
+            }
+            if (event.target === modal2) {
+                schliesseUpdateModal(false);
             }
         }
         
@@ -1960,6 +1809,3 @@ function laden() {
     </script>
 </body>
 </html>
-
-
-
