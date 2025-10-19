@@ -506,14 +506,13 @@
                 
                 <label>Passwort:</label>
                 <input type="password" id="passwort" placeholder="Optional" autocomplete="current-password">
-<p class="help-text">Optional: Mit einem Passwort kannst nur du deine Bestellung später ändern. Ohne Passwort kann jeder, der deinen Namen kennt, deine Bestellung ändern.</p>
-
+                <p class="help-text">Optional: Mit einem Passwort kannst nur du deine Bestellung später ändern. Ohne Passwort kann jeder, der deinen Namen kennt, deine Bestellung ändern.</p>
                 
-                <label>Anzahl Weißwürste: *</label>
-                <input type="number" id="wuerste" value="0" min="0" max="50" required>
+                <label>Anzahl Weißwürste:</label>
+                <input type="number" id="wuerste" value="0" min="0" max="50">
                 
-                <label>Anzahl Brezn: *</label>
-                <input type="number" id="brezn" value="0" min="0" max="50" required>
+                <label>Anzahl Brezn:</label>
+                <input type="number" id="brezn" value="0" min="0" max="50">
                 
                 <div class="price-info" id="order-total-preview" style="margin-top: 15px;">
                     <strong>Vorschau:</strong><br>
@@ -845,6 +844,16 @@
             
             if (wursteInput) wursteInput.addEventListener('input', updateOrderPreview);
             if (breznInput) breznInput.addEventListener('input', updateOrderPreview);
+        });
+        
+        // Countdown nur wenn Tab aktiv
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                if (countdownInterval) clearInterval(countdownInterval);
+            } else {
+                updateCountdown();
+                countdownInterval = setInterval(updateCountdown, 1000);
+            }
         });
         
         function istEventGeschlossen() {
@@ -1394,7 +1403,45 @@
             const brezn = document.getElementById('brezn').value;
             const passwortHash = await hashPassword(passwort);
             
+            const w = parseInt(wuerste);
+            const b = parseInt(brezn);
+            
             try {
+                // Prüfung: Mindestens 1 Wurst ODER 1 Breze bei neuer Bestellung
+                if (w === 0 && b === 0) {
+                    // Prüfe ob bereits Bestellung existiert
+                    const checkResponse = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
+                    const checkData = await checkResponse.json();
+                    
+                    if (checkData.success) {
+                        const orderResponse = await fetch(`${APPS_SCRIPT_URL}?action=getMyOrder&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
+                        const orderData = await orderResponse.json();
+                        
+                        if (!orderData.success || !orderData.hasOrder) {
+                            // Neue Bestellung mit 0/0 nicht erlaubt
+                            document.getElementById('error').textContent = '✗ Bitte mindestens 1 Wurst oder 1 Breze bestellen!';
+                            document.getElementById('error').style.display = 'block';
+                            setTimeout(() => {
+                                document.getElementById('error').style.display = 'none';
+                            }, 5000);
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'Jetzt bestellen';
+                            return;
+                        }
+                        // Else: Update auf 0/0 ist erlaubt (Abmeldung)
+                    } else {
+                        // Neuer User mit 0/0 nicht erlaubt
+                        document.getElementById('error').textContent = '✗ Bitte mindestens 1 Wurst oder 1 Breze bestellen!';
+                        document.getElementById('error').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('error').style.display = 'none';
+                        }, 5000);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Jetzt bestellen';
+                        return;
+                    }
+                }
+                
                 // 1. Prüfe ob User existiert (Login)
                 const loginResponse = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
                 const loginData = await loginResponse.json();
@@ -1407,6 +1454,8 @@
                         setTimeout(() => {
                             document.getElementById('error').style.display = 'none';
                         }, 5000);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Jetzt bestellen';
                         return;
                     }
                     
@@ -1803,11 +1852,7 @@
             ladePreise();
             laden();
             ladeHistorie();
-            
-            setInterval(laden, 30000);
-            setInterval(ladeHistorie, 60000);
         });
     </script>
 </body>
 </html>
-
