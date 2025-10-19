@@ -153,9 +153,9 @@
             text-align: center;
         }
         .countdown-title {
-            font-size: 14px;
+            font-size: 36px;
             margin-bottom: 10px;
-            opacity: 0.9;
+            font-weight: bold;
         }
         .countdown {
             font-size: 36px;
@@ -291,6 +291,12 @@
             vertical-align: middle;
             display: inline-block;
         }
+        .wurst-icon-big {
+            width: 40px;
+            height: 40px;
+            vertical-align: middle;
+            display: inline-block;
+        }
         
         /* Siegertreppe Styles */
         .podium-section {
@@ -301,6 +307,7 @@
             gap: 10px;
             margin-bottom: 20px;
             justify-content: center;
+            flex-wrap: wrap;
         }
         .podium-tab {
             padding: 10px 20px;
@@ -323,11 +330,13 @@
         }
         .podium-wrapper {
             display: flex;
-            gap: 40px;
+            gap: 20px;
             margin-bottom: 30px;
+            flex-wrap: wrap;
         }
         .podium-block {
             flex: 1;
+            min-width: 280px;
         }
         .podium-title {
             text-align: center;
@@ -468,11 +477,32 @@
             width: auto;
             margin: 0;
         }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                margin: 20px auto;
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            .podium-wrapper {
+                flex-direction: column;
+            }
+            .podium-block {
+                width: 100%;
+                min-width: 100%;
+            }
+            .price-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1><img src="https://fevwursten.github.io/weisswurst.png" class="wurst-icon"> Weißwurstfrühstück 🥨</h1>
+        <h1><img src="https://fevwursten.github.io/weisswurst.png" class="wurst-icon-big"> Weißwurstfrühstück 🥨</h1>
         <div class="date-subtitle" id="datum-titel">Lädt...</div>
         
         <div class="info-badge hidden" id="sonder-info">
@@ -480,7 +510,7 @@
         </div>
         
         <div class="countdown-box" id="countdown-box">
-            <div class="countdown-title">⏰ Zeit bis Bestellende</div>
+            <div class="countdown-title" id="countdown-title">⏰ Zeit bis Bestellende</div>
             <div class="countdown" id="countdown">--:--:--</div>
         </div>
         
@@ -492,8 +522,6 @@
         <div id="form-container">
             <div id="success" class="success">✓ Bestellung erfolgreich!</div>
             <div id="error" class="error">✗ Fehler beim Senden!</div>
-            
-            <h3>Jetzt bestellen</h3>
             
             <div class="price-info">
                 <strong>Aktuelle Preise:</strong><br>
@@ -975,6 +1003,7 @@
             
             const countdownElement = document.getElementById('countdown');
             const countdownBox = document.getElementById('countdown-box');
+            const countdownTitle = document.getElementById('countdown-title');
             const geschlossen = istEventGeschlossen();
             
             if (ausserplanmaessigDeadline) {
@@ -984,10 +1013,10 @@
                 if (wochentag !== 5) {
                     countdownBox.classList.remove('countdown-expired');
                     countdownBox.classList.add('countdown-special');
-                    document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⭐ Außerplanmäßiges Event - Zeit bis Bestellende';
+                    countdownTitle.textContent = '⭐ Außerplanmäßiges Event - Zeit bis Bestellende';
                 } else {
                     countdownBox.classList.remove('countdown-expired', 'countdown-special');
-                    document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⏰ Zeit bis Bestellende';
+                    countdownTitle.textContent = '⏰ Zeit bis Bestellende';
                 }
                 
                 if (!geschlossen) {
@@ -998,10 +1027,10 @@
                 countdownBox.classList.remove('countdown-expired', 'countdown-special');
                 document.getElementById('deadline-warning').classList.add('hidden');
                 document.getElementById('form-container').classList.remove('hidden');
-                document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⏰ Zeit bis Bestellende';
+                countdownTitle.textContent = '⏰ Zeit bis Bestellende';
             } else {
                 countdownBox.classList.remove('countdown-special');
-                document.getElementById('countdown-box').querySelector('.countdown-title').textContent = '⏰ Zeit bis Bestellende';
+                countdownTitle.textContent = '⏰ Zeit bis Bestellende';
             }
             
             if (diff <= 0 || geschlossen) {
@@ -1028,7 +1057,8 @@
             const minuten = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const sekunden = Math.floor((diff % (1000 * 60)) / 1000);
             
-            const tageStr = tage > 0 ? `${tage}d ` : '';
+            const tageText = pluralize(tage, 'Tag', 'Tage');
+            const tageStr = tage > 0 ? `${tage} ${tageText} ` : '';
             const stundenStr = String(stunden).padStart(2, '0');
             const minutenStr = String(minuten).padStart(2, '0');
             const sekundenStr = String(sekunden).padStart(2, '0');
