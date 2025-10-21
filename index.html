@@ -1673,6 +1673,13 @@
                     }
                 } else {
                     // Create new order (needs prices)
+                    console.log('=== CREATE ORDER DEBUG ===');
+console.log('Name:', name);
+console.log('Passwort Hash:', passwortHash);
+console.log('Hash Length:', passwortHash.length);
+console.log('Expected EMPTY_HASH:', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+console.log('Match?:', passwortHash === 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+
                     const preisW = (typeof currentPreisWurst !== 'undefined') ? currentPreisWurst : 0;
                     const preisB = (typeof currentPreisBreze !== 'undefined') ? currentPreisBreze : 0;
                     const crtResp = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${w}&brezn=${b}&preisWurst=${preisW}&preisBreze=${preisB}`);
@@ -2195,5 +2202,6 @@ function ladeHistorie() {
 
 </body>
 </html>
+
 
 
