@@ -851,7 +851,9 @@
         let currentPreisBreze = 1.50;
         let updateModalResolve = null;
         
-        const EMPTY_PASSWORD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+        
+let isSubmitting = false;
+const EMPTY_PASSWORD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
         
         function getBerlinTime() {
             return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
@@ -1618,7 +1620,8 @@ if (data.success) {
         }
 
         document.getElementById('order-form').addEventListener('submit', async e => {
-            e.preventDefault();
+            
+            if (isSubmitting) return; isSubmitting = True;e.preventDefault();
 
             if (istEventGeschlossen && istEventGeschlossen()) {
                 alert('Event wurde geschlossen!');
@@ -1695,11 +1698,11 @@ if (data.success) {
                 document.getElementById('order-form').reset();
                 await laden(); // Reload orders
 
-            } catch (error) {
-                console.error('Order error:', error);
-                alert('✗ ' + error.message);
+                } finally {
+                isSubmitting = false;
             }
         });
+
 
 function laden() {
             fetch(APPS_SCRIPT_URL)
