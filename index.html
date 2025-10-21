@@ -1596,12 +1596,20 @@
         
         
         // Lightweight confirmation modal for updating an existing order
-        async function zeigeUpdateModal(oldW, oldB, newW, newB) {
-            return confirm(`Bestehende Bestellung ändern?
+        async function zeigeUpdateModal(altW, altB, neuW, neuB) {
+  return new Promise(resolve => {
+    updateModalResolve = resolve;
+    const altWurstText = pluralize(altW, 'Wurst', 'Würste');
+    const neuWurstText = pluralize(neuW, 'Wurst', 'Würste');
 
-Alt: ${oldW} W, ${oldB} B
-Neu: ${newW} W, ${newB} B`);
-        }
+    document.getElementById('current-order-display').innerHTML = 
+      `${WURSTICON} ${altW} ${altWurstText}, ${altB} Brezn`;
+    document.getElementById('new-order-display').innerHTML = 
+      `${WURSTICON} ${neuW} ${neuWurstText}, ${neuB} Brezn`;
+
+    document.getElementById('update-modal').style.display = 'block';
+  });
+}
 
         document.getElementById('order-form').addEventListener('submit', async e => {
             e.preventDefault();
@@ -2186,6 +2194,5 @@ function ladeHistorie() {
 
 </body>
 </html>
-
 
 
