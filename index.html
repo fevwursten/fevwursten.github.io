@@ -815,23 +815,11 @@
 
     <div id="update-modal" class="modal">
         <div class="modal-content">
-            <h3>Bestellung ändern</h3>
-            <p style="margin-bottom: 15px;">Möchtest du deine bestehende Bestellung ändern?</p>
-
-            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #b9052d;">
-                <div style="margin-bottom: 12px;">
-                    <strong style="color: #6e031b;">Aktuelle Bestellung:</strong><br>
-                    <span id="current-order-display" style="font-size: 16px;"></span>
-                </div>
-                <div>
-                    <strong style="color: #6e031b;">Neue Bestellung:</strong><br>
-                    <span id="new-order-display" style="font-size: 16px;"></span>
-                </div>
-            </div>
-
+            <h3>Bestellung aktualisieren?</h3>
+            <p id="update-modal-text">Du hast bereits bestellt.</p>
             <div class="modal-buttons">
                 <button onclick="schliesseUpdateModal(false)" style="background: #999;">Abbrechen</button>
-                <button onclick="schliesseUpdateModal(true)" class="admin-success">Bestellung ändern</button>
+                <button onclick="schliesseUpdateModal(true)" class="admin-success">Aktualisieren</button>
             </div>
         </div>
     </div>
@@ -1595,21 +1583,12 @@
         }
         
         
-        // Modal-based confirmation for updating an existing order
-        async function zeigeUpdateModal(altW, altB, neuW, neuB) {
-            return new Promise((resolve) => {
-                updateModalResolve = resolve;
-                const altWurstText = pluralize(altW, 'Wurst', 'Würste');
-                const neuWurstText = pluralize(neuW, 'Wurst', 'Würste');
+        // Lightweight confirmation modal for updating an existing order
+        async function zeigeUpdateModal(oldW, oldB, newW, newB) {
+            return confirm(`Bestehende Bestellung ändern?
 
-                const altOrder = '🌭 ' + altW + ' ' + altWurstText + ', ' + altB + ' Brezn';
-                const neuOrder = '🌭 ' + neuW + ' ' + neuWurstText + ', ' + neuB + ' Brezn';
-
-                document.getElementById('current-order-display').innerHTML = altOrder;
-                document.getElementById('new-order-display').innerHTML = neuOrder;
-
-                document.getElementById('update-modal').style.display = 'block';
-            });
+Alt: ${oldW} W, ${oldB} B
+Neu: ${newW} W, ${newB} B`);
         }
 
         document.getElementById('order-form').addEventListener('submit', async e => {
@@ -1631,6 +1610,29 @@
 
             try {
                 const passwortHash = await hashPassword(passwort);
+
+                // AUTO-REGISTRATION: Check if user exists, register if not
+                console.log('Checking if user exists...');
+                try {
+                    const userCheckResp = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
+                    const userCheckData = await userCheckResp.json();
+
+                    if (userCheckData.error === 'user_not_found') {
+                        console.log('User not found, auto-registering...');
+                        const registerResp = await fetch(`${APPS_SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}`);
+                        const registerData = await registerResp.json();
+
+                        if (!registerData.success) {
+                            throw new Error('Auto-Registrierung fehlgeschlagen: ' + (registerData.message || registerData.error || 'Unbekannter Fehler'));
+                        }
+                        console.log('✓ User automatically registered');
+                    } else if (userCheckData.success) {
+                        console.log('✓ User already exists');
+                    }
+                } catch (regError) {
+                    console.error('Registration check failed:', regError);
+                    throw new Error('Benutzerprüfung fehlgeschlagen: ' + regError.message);
+                }
 
                 
                 // Probe: if admin reset is active, open reset dialog and block ordering
@@ -1673,13 +1675,6 @@
                     }
                 } else {
                     // Create new order (needs prices)
-                    console.log('=== CREATE ORDER DEBUG ===');
-console.log('Name:', name);
-console.log('Passwort Hash:', passwortHash);
-console.log('Hash Length:', passwortHash.length);
-console.log('Expected EMPTY_HASH:', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
-console.log('Match?:', passwortHash === 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
-
                     const preisW = (typeof currentPreisWurst !== 'undefined') ? currentPreisWurst : 0;
                     const preisB = (typeof currentPreisBreze !== 'undefined') ? currentPreisBreze : 0;
                     const crtResp = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${w}&brezn=${b}&preisWurst=${preisW}&preisBreze=${preisB}`);
@@ -2202,6 +2197,5 @@ function ladeHistorie() {
 
 </body>
 </html>
-
 
 
