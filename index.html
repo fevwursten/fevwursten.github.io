@@ -1629,6 +1629,7 @@ Neu: ${newW} W, ${newB} B`);
         }
 
         
+
 document.getElementById('order-form').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -1672,15 +1673,20 @@ document.getElementById('order-form').addEventListener('submit', async function(
         } catch (e2) { /* ignore */ }
 
         if (existing) {
-            // Unterscheidet sich die Menge?
-            if (Number(existing.wuerste) !== w || Number(existing.brezn) !== b) {
-                var ok = confirm('Bestehende Bestellung ändern?\n\nAlt: ' + existing.wuerste + ' W, ' + existing.brezn + ' B\nNeu: ' + w + ' W, ' + b + ' B');
-                if (!ok) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Jetzt bestellen';
-                    return;
-                }
+            var altW = Number(existing.wuerste) || 0;
+            var altB = Number(existing.brezn) || 0;
+            var msg  = 'Du hast bereits eine Bestellung.\n\n' +
+                       'Alt: ' + altW + ' W, ' + altB + ' B\n' +
+                       'Neu: ' + w + ' W, ' + b + ' B\n\n' +
+                       'Soll die Bestellung aktualisiert werden?';
+
+            var ok = confirm(msg);
+            if (!ok) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Jetzt bestellen';
+                return;
             }
+
             var updUrl = APPS_SCRIPT_URL + '?action=update&name=' + encodeURIComponent(name) + '&hash=' + encodeURIComponent(passwortHash) + '&wuerste=' + w + '&brezn=' + b;
             var updResp = await fetch(updUrl);
             var updData = await updResp.json();
