@@ -1588,15 +1588,12 @@
                 const altWurstText = pluralize(altW, 'Wurst', 'Würste');
                 const neuWurstText = pluralize(neuW, 'Wurst', 'Würste');
 
-                document.getElementById('current-order-display').innerHTML = 
-                    `🌭 ${altW} ${altWurstText}, ${altB} Brezn`;
-                document.getElementById('new-order-display').innerHTML = 
-                    `🌭 ${neuW} ${neuWurstText}, ${neuB} Brezn`;
+                const altOrder = '🌭 ' + altW + ' ' + altWurstText + ', ' + altB + ' Brezn';
+                const neuOrder = '🌭 ' + neuW + ' ' + neuWurstText + ', ' + neuB + ' Brezn';
 
-                document.getElementById('update-modal').style.display = 'block';
-            });
-        }, ${altB} Brezn</strong> bestellt.<br><br>` +
-                    `Auf <strong>${neuW} ${neuWurstText}, ${neuB} Brezn</strong> ändern?`;
+                document.getElementById('current-order-display').innerHTML = altOrder;
+                document.getElementById('new-order-display').innerHTML = neuOrder;
+
                 document.getElementById('update-modal').style.display = 'block';
             });
         }
