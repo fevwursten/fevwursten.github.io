@@ -841,7 +841,24 @@
         const WURST_ICON = '<img src="https://fevwursten.github.io/weisswurst.png" class="wurst-icon">';
         const PAYPAL_USERNAME = 'brotzeit';
         
-        let countdownInterval = null;
+        
+
+function showSuccess(msg) {
+    const el = document.getElementById('success');
+    if (!el) return alert(msg);
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+function showError(msg) {
+    const el = document.getElementById('error');
+    if (!el) return alert('✗ ' + msg);
+    el.textContent = (msg.startsWith('✗') ? msg : ('✗ ' + msg));
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+let countdownInterval = null;
         let archivierungsDatum = null;
         let ausserplanmaessigDeadline = null;
         let freigeschaltet = false;
@@ -910,8 +927,7 @@ const EMPTY_PASSWORD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca49
                 .then(r => r.json())
                 .then(data => {
                     
-                    window.alleBestellungen = Array.isArray(data) ? data : [];
-if (data.success) {
+                    if (data.success) {
                         currentPreisWurst = data.preisWurst;
                         currentPreisBreze = data.preisBreze;
                         
@@ -1630,6 +1646,7 @@ if (data.success) {
 
             const name = (document.getElementById('name').value || '').trim();
             const passwort = (document.getElementById('passwort').value || '').trim();
+let wasUpdate = false;
             const w = parseInt(document.getElementById('wuerste').value) || 0;
             const b = parseInt(document.getElementById('brezn').value) || 0;
 
@@ -1649,21 +1666,21 @@ if (data.success) {
                     );
                 }
 
-                // STEP 2: If existing order found, show update modal
-                if (existingOrder) {
-                    console.log('Existing order found in local cache:', existingOrder);
-                    const altW = parseInt(existingOrder.Wuerste) || 0;
-                    const altB = parseInt(existingOrder.Brezn) || 0;
-
+                // STEP 2: If existing order found, show update modal (only when quantities differ)
+            let wasUpdate = false;
+            if (existingOrder) {
+                const altW = parseInt(existingOrder.Wuerste) || 0;
+                const altB = parseInt(existingOrder.Brezn) || 0;
+                const isDifferent = (altW !== w) || (altB !== b);
+                if (isDifferent) {
                     const userConfirmed = await zeigeUpdateModal(altW, altB, w, b);
                     if (!userConfirmed) {
-                        console.log('User cancelled update');
-                        return;
+                        return; // user cancelled update
                     }
-                    console.log('User confirmed update');
+                    wasUpdate = true;
                 }
-
-                // STEP 3: Auto-register if user does not exist
+            }
+            // STEP 3: Auto-register if user does not exist
                 try {
                     const loginCheckResp = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
                     const loginCheckData = await loginCheckResp.json();
@@ -1694,9 +1711,9 @@ if (data.success) {
                     throw new Error(createData.message || createData.error || 'Bestellung fehlgeschlagen');
                 }
 
-                alert('✓ Bestellung erfolgreich!');
+                showSuccess(wasUpdate ? '✓ Bestellung aktualisiert!' : '✓ Bestellung erfolgreich!');
                 document.getElementById('order-form').reset();
-                await laden(); // Reload orders
+                await laden(); try { if (typeof scrollToOrders==='function') scrollToOrders(); } catch(e) {} // Reload orders
 
                 } finally {
                 isSubmitting = false;
@@ -1708,7 +1725,9 @@ function laden() {
             fetch(APPS_SCRIPT_URL)
                 .then(r => r.json())
                 .then(data => {
-                    let html = '';
+                    
+                    window.alleBestellungen = Array.isArray(data) ? data : [];
+let html = '';
                     let summeW = 0;
                     let summeB = 0;
                     let summeGeldW = 0;
@@ -2199,3 +2218,7 @@ function ladeHistorie() {
 </html>
 
 
+
+function scrollToOrders(){
+    try{ document.getElementById('liste').scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){}
+}
