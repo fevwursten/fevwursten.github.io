@@ -1217,7 +1217,7 @@
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             return hashHex;
         }
-        
+
         function showPodiumTab(tab) {
             document.querySelectorAll('.podium-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.podium-container').forEach(t => t.classList.remove('active'));
@@ -1394,7 +1394,7 @@
                         return;
                     }
                     
-                    const users = data.users || [];
+                    const users = (data.users || []).filter(u => u && u.name && typeof u.name === 'string');
                     const userList = document.getElementById('user-list');
                     
                     if (users.length === 0) {
@@ -1410,7 +1410,7 @@
                                 <div class="user-item">
                                     <span class="user-name">${user.name}</span>
                                     <span class="user-status ${statusClass}">${statusText}</span>
-                                    <button class="user-btn" onclick="toggleUserLock('${user.name.replace(/'/g, "\\'")}', ${!isLocked})">${btnText}</button>
+                                    <button class="user-btn" onclick="toggleUserLock('${(user.name || '').replace(/'/g, "\\'")}', ${!isLocked})">${btnText}</button>
                                 </div>
                             `;
                         }).join('');
@@ -1531,12 +1531,7 @@
                 const loginData = await loginResponse.json();
                 
                 if (loginData.success) {
-                    if (loginData.requirePasswordReset === 'true') {
-                        document.getElementById('error').textContent = '✗ Du musst erst ein Passwort setzen! Kontaktiere den Admin.';
-                        document.getElementById('error').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('error').style.display = 'none';
-                        }, 5000);
+                    if (loginData.requirePasswordReset === 'true') { zeigePasswortReset(name); submitBtn.disabled=false; submitBtn.textContent='Jetzt bestellen'; return; }, 5000);
                         submitBtn.disabled = false;
                         submitBtn.textContent = 'Jetzt bestellen';
                         return;
@@ -1960,7 +1955,152 @@ function ladeHistorie() {
             laden();
             ladeHistorie();
         });
+
+        // ===== Passwort-Reset Flow (2-Wege) =====
+        let pendingResetName = null;
+
+        function zeigePasswortReset(name) {
+            pendingResetName = name;
+            document.getElementById('reset-username').value = name;
+            document.querySelector('input[name="pwchoice"][value="nopw"]').checked = true;
+            document.getElementById('pw-fields').style.display = 'none';
+            clearPwResetFeedback();
+            document.getElementById('pwreset-modal').style.display = 'flex';
+        }
+
+        function schliessePasswortReset() {
+            document.getElementById('pwreset-modal').style.display = 'none';
+        }
+
+        function clearPwResetFeedback() {
+            const err = document.getElementById('pwreset-error');
+            const ok = document.getElementById('pwreset-success');
+            err.style.display = 'none';
+            err.textContent = '';
+            ok.style.display = 'none';
+            ok.textContent = '';
+            document.getElementById('newpw1').value = '';
+            document.getElementById('newpw2').value = '';
+        }
+
+        // Toggle fields
+        document.addEventListener('change', (e) => {
+            if (e.target && e.target.name === 'pwchoice') {
+                const choice = document.querySelector('input[name="pwchoice"]:checked').value;
+                document.getElementById('pw-fields').style.display = (choice === 'setpw') ? 'block' : 'none';
+                clearPwResetFeedback();
+            }
+        });
+
+        async function pwresetWeiter() {
+            const name = pendingResetName;
+            if (!name) { return; }
+            const choice = document.querySelector('input[name="pwchoice"]:checked').value;
+            const err = document.getElementById('pwreset-error');
+            const ok = document.getElementById('pwreset-success');
+            err.style.display = 'none'; ok.style.display = 'none';
+
+            if (choice === 'nopw') {
+                // Confirm
+                if (!confirm('Wirklich ohne Passwort fortfahren? Du kannst dann in Zukunft ohne Passwort bestellen.')) {
+                    return;
+                }
+                try {
+                    const url = `${APPS_SCRIPT_URL}?action=finalizeNoPassword&name=${encodeURIComponent(name)}`;
+                    const r = await fetch(url);
+                    const j = await r.json();
+                    if (j && j.success) {
+                        ok.textContent = '✓ Ohne Passwort fortgesetzt.';
+                        ok.style.display = 'block';
+                        setTimeout(() => { schliessePasswortReset(); location.reload(); }, 900);
+                    } else {
+                        if (j && (j.error === 'reset_not_allowed')) {
+                            err.textContent = 'Dein Reset ist nicht mehr aktiv (widerrufen/abgelaufen). Bitte Admin kontaktieren.';
+                        } else {
+                            err.textContent = '✗ ' + (j && (j.message || j.error) || 'Fehler');
+                        }
+                        err.style.display = 'block';
+                    }
+                } catch (e) {
+                    err.textContent = '✗ Netzwerkfehler';
+                    err.style.display = 'block';
+                }
+                return;
+            }
+
+            // setpw
+            const p1 = document.getElementById('newpw1').value || '';
+            const p2 = document.getElementById('newpw2').value || '';
+            if (!p1 && !p2) {
+                if (!confirm('Wirklich kein Passwort setzen?')) return;
+                // switch back to nopw silently
+                document.querySelector('input[name="pwchoice"][value="nopw"]').checked = true;
+                document.getElementById('pw-fields').style.display = 'none';
+                return;
+            }
+            if (p1.length < 3) {
+                err.textContent = '✗ Passwort zu kurz (mind. 3 Zeichen).';
+                err.style.display = 'block';
+                return;
+            }
+            if (p1 !== p2) {
+                err.textContent = '✗ Passwörter stimmen nicht überein.';
+                err.style.display = 'block';
+                return;
+            }
+            try {
+                const newHash = await hashPassword(p1);
+                const url = `${APPS_SCRIPT_URL}?action=setPassword&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(newHash)}`;
+                const r = await fetch(url);
+                const j = await r.json();
+                if (j && j.success) {
+                    ok.textContent = '✓ Passwort gespeichert.';
+                    ok.style.display = 'block';
+                    setTimeout(() => { schliessePasswortReset(); location.reload(); }, 900);
+                } else {
+                    if (j && (j.error === 'reset_not_allowed')) {
+                        err.textContent = 'Dein Reset ist nicht mehr aktiv (widerrufen/abgelaufen). Bitte Admin kontaktieren.';
+                    } else if (j && j.error === 'weak_password') {
+                        err.textContent = '✗ Passwort zu kurz (mind. 3 Zeichen).';
+                    } else {
+                        err.textContent = '✗ ' + (j && (j.message || j.error) || 'Fehler');
+                    }
+                    err.style.display = 'block';
+                }
+            } catch (e) {
+                err.textContent = '✗ Netzwerkfehler';
+                err.style.display = 'block';
+            }
+        }
+
     </script>
+
+    <div id="pwreset-modal" class="modal">
+      <div class="modal-content">
+        <h3>Account-Optionen</h3>
+        <p>Für deinen Account ist ein einmaliger Passwort‑Reset aktiv. Wähle, wie du fortfahren willst.</p>
+        <label>Benutzername</label>
+        <input type="text" id="reset-username" readonly>
+        <div class="segmented">
+          <label><input type="radio" name="pwchoice" value="nopw" checked> Ohne Passwort weitermachen</label>
+          <label><input type="radio" name="pwchoice" value="setpw"> Passwort setzen</label>
+        </div>
+        <div id="pw-fields" style="display:none; margin-top:8px;">
+          <label>Neues Passwort</label>
+          <input type="password" id="newpw1" placeholder="mind. 3 Zeichen" autocomplete="new-password">
+          <label>Neues Passwort wiederholen</label>
+          <input type="password" id="newpw2" placeholder="nochmal" autocomplete="new-password">
+          <p class="help-text">Tipp: Mindestens 3 Zeichen. Vermeide deinen Namen.</p>
+        </div>
+        <div id="pwreset-error" class="error" style="display:none;"></div>
+        <div id="pwreset-success" class="success" style="display:none;"></div>
+        <div class="modal-buttons">
+          <button onclick="schliessePasswortReset()" class="btn-secondary">Abbrechen</button>
+          <button onclick="pwresetWeiter()" class="admin-success">Weiter</button>
+        </div>
+      </div>
+    </div>
+
 </body>
 </html>
 
