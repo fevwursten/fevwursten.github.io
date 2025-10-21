@@ -1587,6 +1587,20 @@
                 updateModalResolve = resolve;
                 const altWurstText = pluralize(altW, 'Wurst', 'Würste');
                 const neuWurstText = pluralize(neuW, 'Wurst', 'Würste');
+                document.getElementById('update-modal-text').innerHTML = 
+                    `Du hast bereits <strong>${altW} ${altWurstText}, ${altB} Brezn</strong> bestellt.<br><br>` +
+                    `Auf <strong>${neuW} ${neuWurstText}, ${neuB} Brezn</strong> ändern?`;
+                document.getElementById('update-modal').style.display = 'block';
+            });
+        }
+        
+        
+        // Modal-based confirmation for updating an existing order
+        async function zeigeUpdateModal(altW, altB, neuW, neuB) {
+            return new Promise((resolve) => {
+                updateModalResolve = resolve;
+                const altWurstText = pluralize(altW, 'Wurst', 'Würste');
+                const neuWurstText = pluralize(neuW, 'Wurst', 'Würste');
 
                 const altOrder = '🌭 ' + altW + ' ' + altWurstText + ', ' + altB + ' Brezn';
                 const neuOrder = '🌭 ' + neuW + ' ' + neuWurstText + ', ' + neuB + ' Brezn';
@@ -1596,15 +1610,6 @@
 
                 document.getElementById('update-modal').style.display = 'block';
             });
-        }
-        
-        
-        // Lightweight confirmation modal for updating an existing order
-        async function zeigeUpdateModal(oldW, oldB, newW, newB) {
-            return confirm(`Bestehende Bestellung ändern?
-
-Alt: ${oldW} W, ${oldB} B
-Neu: ${newW} W, ${newB} B`);
         }
 
         document.getElementById('order-form').addEventListener('submit', async e => {
