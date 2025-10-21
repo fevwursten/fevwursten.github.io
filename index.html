@@ -907,7 +907,9 @@
             fetch(`${APPS_SCRIPT_URL}?type=preise`)
                 .then(r => r.json())
                 .then(data => {
-                    if (data.success) {
+                    
+      window.alleBestellungen = Array.isArray(data) ? data : [];
+if (data.success) {
                         currentPreisWurst = data.preisWurst;
                         currentPreisBreze = data.preisBreze;
                         
@@ -1582,13 +1584,7 @@
             }
         }
         
-        function zeigeUpdateModal(altW, altB, neuW, neuB) {
-            return new Promise((resolve) => {
-                updateModalResolve = resolve;
-                const altWurstText = pluralize(altW, 'Wurst', 'Würste');
-                const neuWurstText = pluralize(neuW, 'Wurst', 'Würste');
-                document.getElementById('update-modal-text').innerHTML = 
-                    `Du hast bereits <strong>${altW} ${altWurstText}, ${altB} Brezn</strong> bestellt.<br><br>` +
+        ${altWurstText}, ${altB} Brezn</strong> bestellt.<br><br>` +
                     `Auf <strong>${neuW} ${neuWurstText}, ${neuB} Brezn</strong> ändern?`;
                 document.getElementById('update-modal').style.display = 'block';
             });
@@ -1596,7 +1592,19 @@
         
         
         // Modal-based confirmation for updating an existing order
-        async function zeigeUpdateModal(altW, altB, neuW, neuB) {
+        async );
+        }
+
+        document.getElementById('order-form').addEventListener('submit', async e => {
+            e.preventDefault();
+
+            if (istEventGeschlossen && istEventGeschlossen()) {
+                alert('Event wurde geschlossen!');
+                return;
+            }
+
+            const name = (document.getElementById('name').value || '').trim();
+            const passwort = (document.getElementByfunction zeigeUpdateModal(altW, altB, neuW, neuB) {
             return new Promise((resolve) => {
                 updateModalResolve = resolve;
                 const altWurstText = pluralize(altW, 'Wurst', 'Würste');
@@ -1609,19 +1617,7 @@
                 document.getElementById('new-order-display').innerHTML = neuOrder;
 
                 document.getElementById('update-modal').style.display = 'block';
-            });
-        }
-
-        document.getElementById('order-form').addEventListener('submit', async e => {
-            e.preventDefault();
-
-            if (istEventGeschlossen && istEventGeschlossen()) {
-                alert('Event wurde geschlossen!');
-                return;
-            }
-
-            const name = (document.getElementById('name').value || '').trim();
-            const passwort = (document.getElementById('passwort').value || '').trim();
+            }Id('passwort').value || '').trim();
             const w = parseInt(document.getElementById('wuerste').value) || 0;
             const b = parseInt(document.getElementById('brezn').value) || 0;
 
