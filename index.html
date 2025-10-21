@@ -815,17 +815,29 @@
 
     <div id="update-modal" class="modal">
         <div class="modal-content">
-            <h3>Bestellung aktualisieren?</h3>
-            <p id="update-modal-text">Du hast bereits bestellt.</p>
+            <h3>Bestellung ändern</h3>
+            <p style="margin-bottom: 20px;">Möchtest du deine bestehende Bestellung ändern?</p>
+
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #b9052d;">
+                <div style="margin-bottom: 12px;">
+                    <strong style="color: #6e031b;">Aktuelle Bestellung:</strong><br>
+                    <span id="current-order-display" style="font-size: 16px;"></span>
+                </div>
+                <div>
+                    <strong style="color: #6e031b;">Neue Bestellung:</strong><br>
+                    <span id="new-order-display" style="font-size: 16px;"></span>
+                </div>
+            </div>
+
             <div class="modal-buttons">
-                <button onclick="schliesseUpdateModal(false)" style="background: #999;">Abbrechen</button>
-                <button onclick="schliesseUpdateModal(true)" class="admin-success">Aktualisieren</button>
+                <button onclick="schliesseUpdateModal(false)" class="btn-secondary" style="background: #999;">Abbrechen</button>
+                <button onclick="schliesseUpdateModal(true)" class="admin-success">Bestellung ändern</button>
             </div>
         </div>
     </div>
 
     <script>
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyc-i8lmUFvpJ5QxZ2EOo8FbegOnH0ez9vyBIGDynZtu12mOUtTMHKlbz4XqXls2EbwwA/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdmOwK3MeR__gaScFtslQO0jfHoJhi4nzISR2l26CmSMQKCh8BxQ0gcmMq7izQiq0rng/exec';
         const WURST_ICON = '<img src="https://fevwursten.github.io/weisswurst.png" class="wurst-icon">';
         const PAYPAL_USERNAME = 'brotzeit';
         
@@ -2174,6 +2186,5 @@ function ladeHistorie() {
 
 </body>
 </html>
-
 
 
