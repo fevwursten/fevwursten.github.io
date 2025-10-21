@@ -192,18 +192,26 @@
     // Trage HIER deine Apps Script Web-App URL ein:
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdmOwK3MeR__gaScFtslQO0jfHoJhi4nzISR2l26CmSMQKCh8BxQ0gcmMq7izQiq0rng/exec';
 
-    function jsonp(urlBase, params) {
-      return new Promise((resolve, reject) => {
-        const cb = 'cb_' + Math.random().toString(36).slice(2);
-        const qs = new URLSearchParams(params || {});
-        qs.set('callback', cb);
-        const script = document.createElement('script');
-        script.src = urlBase + (urlBase.includes('?') ? '&' : '?') + qs.toString();
-        script.onerror = () => { delete window[cb]; script.remove(); reject(new Error('JSONP load error')); };
-        window[cb] = (data) => { resolve(data); delete window[cb]; script.remove(); };
-        document.body.appendChild(script);
-      });
-    }
+  function jsonp(urlBase, params) {
+    return new Promise((resolve, reject) => {
+      const cb = 'cb_' + Math.random().toString(36).slice(2);
+      const qs = new URLSearchParams(params || {});
+      qs.set('callback', cb);
+      const url = urlBase + (urlBase.includes('?') ? '&' : '?') + qs.toString();
+      console.log('JSONP URL:', url);
+
+      const script = document.createElement('script');
+      script.src = url;
+      script.onerror = () => {
+        console.error('JSONP load error for:', url);
+        alert('JSONP load error.\n\nBitte öffne diese URL im Inkognito:\n' + url);
+        delete window[cb]; script.remove();
+        reject(new Error('JSONP load error'));
+      };
+      window[cb] = (data) => { resolve(data); delete window[cb]; script.remove(); };
+      document.body.appendChild(script);
+    });
+  }
 
     // SHA-256
     async function hashPassword(pw) {
