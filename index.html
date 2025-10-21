@@ -622,6 +622,34 @@
   .choice-group { grid-template-columns: 1fr; }
 }
 
+
+/* Self-manage section */
+#self-manage { margin-top: 26px; }
+#self-manage .muted { margin-bottom: 12px; display:block; }
+
+
+/* Admin userlist badges */
+.user-item .badge {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 999px;
+  margin-right: 8px;
+  vertical-align: middle;
+  font-weight: 600;
+}
+.badge-pw {
+  background: #e6f4ea;
+  color: #1e8b47;
+  border: 1px solid #cbe9d3;
+}
+.badge-nopw {
+  background: #f1f2f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
 </style>
 </head>
 <body>
@@ -1507,20 +1535,29 @@
                     if (users.length === 0) {
                         userList.innerHTML = '<div class="no-data">Keine Benutzer vorhanden</div>';
                     } else {
-                        userList.innerHTML = users.map(user => {
-                            const isLocked = user.requirePasswordReset === 'true';
-                            const statusClass = isLocked ? 'status-locked' : 'status-unlocked';
-                            const statusText = isLocked ? 'Muss PW setzen' : 'Normal';
-                            const btnText = isLocked ? 'Sperren aufheben' : 'PW-Pflicht aktivieren';
-                            
-                            return `
-                                <div class="user-item">
-                                    <span class="user-name">${user.name}</span>
-                                    <span class="user-status ${statusClass}">${statusText}</span>
-                                    <button class="user-btn" onclick="toggleUserLock('${(user.name || '').replace(/'/g, "\\'")}', ${!isLocked})">${btnText}</button>
-                                </div>
-                            `;
-                        }).join('');
+                        
+                    
+                    userList.innerHTML = users.map(user => {
+                        const isLocked = user.requirePasswordReset === 'true';
+                        const hasPw = user.hasPassword === 'true';
+                        const statusClass = isLocked ? 'status-locked' : 'status-unlocked';
+                        const statusText = isLocked ? 'Muss PW setzen' : 'Normal';
+                        const badgeHtml = hasPw
+                          ? `<span class="badge badge-pw">hat&nbsp;PW</span>`
+                          : `<span class="badge badge-nopw">ohne&nbsp;PW</span>`;
+                        const btnHtml = isLocked
+                          ? `<button class="btn-admin" title="Hebt den ausgestellten Passwort-Reset sofort auf" onclick="revokeReset('${(user.name||'').replace(/'/g, "\\'")}')">Reset widerrufen</button>`
+                          : `<button class="btn-admin" title="Erlaubt einmalig, beim nächsten Login ein Passwort zu setzen (24&nbsp;h gültig)" onclick="issueReset('${(user.name||'').replace(/'/g, "\\'")}', 1440)">Reset erlauben (24 h)</button>`;
+                        return `
+                            <div class="user-item">
+                                <span class="user-name">${badgeHtml}${user.name}</span>
+                                <span class="user-status ${statusClass}">${statusText}</span>
+                                ${btnHtml}
+                            </div>
+                        `;
+                    }).join('');
+
+
                     }
                     
                     userManagement.classList.remove('hidden');
@@ -2130,6 +2167,105 @@ function ladeHistorie() {
             }
         }
 
+
+        // ===== Self-service password change =====
+        function openChangePwModal() {
+            // Prefill name from main name field if present
+            const mainName = (document.getElementById('name')?.value || '').trim();
+            document.getElementById('cpw-name').value = mainName;
+            document.getElementById('cpw-old').value = '';
+            document.getElementById('cpw-new1').value = '';
+            document.getElementById('cpw-new2').value = '';
+            document.getElementById('cpw-error').style.display = 'none';
+            document.getElementById('cpw-success').style.display = 'none';
+            document.getElementById('changepw-modal').style.display = 'flex';
+        }
+        function closeChangePwModal() {
+            document.getElementById('changepw-modal').style.display = 'none';
+        }
+        async function submitChangePw() {
+            const name = (document.getElementById('cpw-name').value || '').trim();
+            const oldPw = document.getElementById('cpw-old').value || '';
+            const p1 = document.getElementById('cpw-new1').value || '';
+            const p2 = document.getElementById('cpw-new2').value || '';
+            const err = document.getElementById('cpw-error');
+            const ok  = document.getElementById('cpw-success');
+            err.style.display = 'none'; ok.style.display = 'none';
+
+            if (!name) { err.textContent = 'Bitte Benutzernamen eingeben.'; err.style.display='block'; return; }
+            if (!oldPw) { err.textContent = 'Bitte aktuelles Passwort eingeben.'; err.style.display='block'; return; }
+            if (p1.length < 3) { err.textContent = 'Neues Passwort zu kurz (mind. 3 Zeichen).'; err.style.display='block'; return; }
+            if (p1 !== p2) { err.textContent = 'Neue Passwörter stimmen nicht überein.'; err.style.display='block'; return; }
+
+            try {
+                const oldHash = await hashPassword(oldPw);
+                const newHash = await hashPassword(p1);
+                const url = `${APPS_SCRIPT_URL}?action=changePassword&name=${encodeURIComponent(name)}&oldHash=${encodeURIComponent(oldHash)}&newHash=${encodeURIComponent(newHash)}`;
+                const r = await fetch(url);
+                const j = await r.json();
+                if (j && j.success) {
+                    ok.textContent = '✓ Passwort aktualisiert.';
+                    ok.style.display = 'block';
+                    setTimeout(() => { closeChangePwModal(); }, 900);
+                } else {
+                    if (j && j.error === 'no_password_set') {
+                        err.textContent = 'Für diesen Account ist derzeit kein Passwort gesetzt. Verwende den Admin-Reset, um eines zu setzen.';
+                    } else if (j && j.error === 'wrong_old_password') {
+                        err.textContent = 'Aktuelles Passwort ist falsch.';
+                    } else if (j && j.error === 'password_reset_active') {
+                        err.textContent = 'Es ist ein Passwort-Reset aktiv. Bitte erst den Reset abschließen.';
+                    } else if (j && j.message) {
+                        err.textContent = j.message;
+                    } else {
+                        err.textContent = 'Änderung fehlgeschlagen.';
+                    }
+                    err.style.display = 'block';
+                }
+            } catch (e) {
+                err.textContent = 'Netzwerkfehler.';
+                err.style.display = 'block';
+            }
+        }
+
+
+        async function issueReset(userName, minutes=1440) {
+            const adminPassword = (document.getElementById('admin-password')?.value || '').trim();
+            if (!adminPassword) { alert('Bitte Admin-Passwort eingeben.'); return; }
+            try {
+                const url = `${APPS_SCRIPT_URL}?action=issueReset&adminPassword=${encodeURIComponent(adminPassword)}&userName=${encodeURIComponent(userName)}&minutes=${minutes}`;
+                const r = await fetch(url);
+                const j = await r.json();
+                if (j && j.success) {
+                    toast('✓ Reset erlaubt – gültig für ' + (minutes/60) + ' Std.');
+                    if (typeof ladeBenutzerListe === 'function') ladeBenutzerListe();
+                } else {
+                    toast('✗ ' + (j && (j.message || j.error) || 'Fehler beim Erteilen'));
+                }
+            } catch (e) {
+                console.error(e);
+                toast('✗ Netzwerkfehler bei Reset erlauben');
+            }
+        }
+
+        async function revokeReset(userName) {
+            const adminPassword = (document.getElementById('admin-password')?.value || '').trim();
+            if (!adminPassword) { alert('Bitte Admin-Passwort eingeben.'); return; }
+            try {
+                const url = `${APPS_SCRIPT_URL}?action=revokeReset&adminPassword=${encodeURIComponent(adminPassword)}&userName=${encodeURIComponent(userName)}`;
+                const r = await fetch(url);
+                const j = await r.json();
+                if (j && j.success) {
+                    toast('✓ Reset widerrufen');
+                    if (typeof ladeBenutzerListe === 'function') ladeBenutzerListe();
+                } else {
+                    toast('✗ ' + (j && (j.message || j.error) || 'Fehler beim Widerrufen'));
+                }
+            } catch (e) {
+                console.error(e);
+                toast('✗ Netzwerkfehler bei Reset widerrufen');
+            }
+        }
+    
     </script>
 
     <div id="pwreset-modal" class="modal">
@@ -2171,6 +2307,34 @@ function ladeHistorie() {
         </div>
       </div>
     </div>
+
+
+<div id="changepw-modal" class="modal">
+  <div class="modal-content" style="max-width:560px;width:92%;padding:20px 22px;">
+    <h3>Passwort ändern</h3>
+    <p>Gib deinen Benutzernamen, dein aktuelles Passwort und das neue Passwort ein.</p>
+
+    <label>Benutzername</label>
+    <input type="text" id="cpw-name" placeholder="Dein Benutzername">
+
+    <label>Aktuelles Passwort</label>
+    <input type="password" id="cpw-old" placeholder="aktuelles Passwort" autocomplete="current-password">
+
+    <label>Neues Passwort</label>
+    <input type="password" id="cpw-new1" placeholder="mind. 3 Zeichen" autocomplete="new-password">
+
+    <label>Neues Passwort wiederholen</label>
+    <input type="password" id="cpw-new2" placeholder="nochmal" autocomplete="new-password">
+
+    <div id="cpw-error" class="error" style="display:none;"></div>
+    <div id="cpw-success" class="success" style="display:none;"></div>
+
+    <div class="modal-buttons" style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-secondary" onclick="closeChangePwModal()">Abbrechen</button>
+      <button class="admin-success" onclick="submitChangePw()">Speichern</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
