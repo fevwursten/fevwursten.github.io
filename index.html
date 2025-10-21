@@ -1504,7 +1504,19 @@ Neu: ${newW} W, ${newB} B`);
             try {
                 const passwortHash = await hashPassword(passwort);
 
-                // Check existing order
+                
+                // Probe: if admin reset is active, open reset dialog and block ordering
+                try {
+                    const probe = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
+                    const probeData = await probe.json();
+                    if (probeData && (probeData.requirePasswordReset === 'true' || probeData.error === 'password_reset_required')) {
+                        zeigePasswortReset(name);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Jetzt bestellen';
+                        return;
+                    }
+                } catch(e) { /* ignore probe errors; fallback to normal flow */ }
+// Check existing order
                 let existing = null;
                 try {
                     const checkResp = await fetch(`${APPS_SCRIPT_URL}?action=getMyOrder&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
