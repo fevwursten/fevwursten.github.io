@@ -515,7 +515,114 @@
                 grid-template-columns: 1fr;
             }
         }
-    </style>
+    
+/* ==== Reset-Dialog Styling ==== */
+.modal .modal-content {
+  max-width: 560px;
+  width: 92%;
+  padding: 20px 22px;
+}
+
+#pwreset-modal h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+#pwreset-modal p {
+  margin-top: 0;
+  margin-bottom: 14px;
+}
+
+#reset-username.readonly-input {
+  background: #f2f2f5;
+  color: #7a7a7a;
+  border-color: #e1e1e6;
+}
+
+.choice-group {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 10px 0 2px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.choice input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.choice .box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid #b9b9c5;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  transition: all .15s ease;
+}
+
+.choice:hover .box {
+  border-color: #8f8fa3;
+}
+
+.choice input[type="radio"]:focus + .box {
+  outline: 2px solid rgba(128,0,128,.25);
+  outline-offset: 2px;
+}
+
+.choice input[type="radio"]:checked + .box {
+  background: #6a1b9a; /* Magenta/Violett-ish, matching your CTA */
+  border-color: #6a1b9a;
+  color: #fff;
+}
+
+.choice .label-text {
+  font-weight: 600;
+}
+
+#pw-fields {
+  margin-top: 10px;
+}
+
+#pw-fields label {
+  margin-top: 10px;
+}
+
+#pwreset-modal .modal-buttons {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+#pwreset-modal .btn-secondary {
+  background: #e31b23;
+  color: #fff;
+}
+
+#pwreset-modal .admin-success {
+  background: #7b1fa2;
+  color: #fff;
+}
+
+@media (min-width: 580px) {
+  .choice-group { grid-template-columns: 1fr; }
+}
+
+</style>
 </head>
 <body>
     <div class="container">
@@ -1911,6 +2018,7 @@ function ladeHistorie() {
         function zeigePasswortReset(name) {
             pendingResetName = name;
             document.getElementById('reset-username').value = name;
+            document.getElementById('reset-username').classList.add('readonly-input');
             document.querySelector('input[name="pwchoice"][value="nopw"]').checked = true;
             document.getElementById('pw-fields').style.display = 'none';
             clearPwResetFeedback();
@@ -2028,21 +2136,35 @@ function ladeHistorie() {
       <div class="modal-content">
         <h3>Account-Optionen</h3>
         <p>Für deinen Account ist ein einmaliger Passwort‑Reset aktiv. Wähle, wie du fortfahren willst.</p>
+
         <label>Benutzername</label>
-        <input type="text" id="reset-username" readonly>
-        <div class="segmented">
-          <label><input type="radio" name="pwchoice" value="nopw" checked> Ohne Passwort weitermachen</label>
-          <label><input type="radio" name="pwchoice" value="setpw"> Passwort setzen</label>
+        <input type="text" id="reset-username" class="readonly-input" readonly>
+
+        <div class="choice-group" role="radiogroup" aria-label="Passwort-Option">
+          <label class="choice">
+            <input type="radio" name="pwchoice" value="nopw" checked aria-label="Ohne Passwort weitermachen">
+            <span class="box">✓</span>
+            <span class="label-text">Ohne Passwort weitermachen</span>
+          </label>
+
+          <label class="choice">
+            <input type="radio" name="pwchoice" value="setpw" aria-label="Passwort setzen">
+            <span class="box">✓</span>
+            <span class="label-text">Passwort setzen</span>
+          </label>
         </div>
-        <div id="pw-fields" style="display:none; margin-top:8px;">
+
+        <div id="pw-fields" style="display:none;">
           <label>Neues Passwort</label>
           <input type="password" id="newpw1" placeholder="mind. 3 Zeichen" autocomplete="new-password">
           <label>Neues Passwort wiederholen</label>
           <input type="password" id="newpw2" placeholder="nochmal" autocomplete="new-password">
           <p class="help-text">Tipp: Mindestens 3 Zeichen. Vermeide deinen Namen.</p>
         </div>
+
         <div id="pwreset-error" class="error" style="display:none;"></div>
         <div id="pwreset-success" class="success" style="display:none;"></div>
+
         <div class="modal-buttons">
           <button onclick="schliessePasswortReset()" class="btn-secondary">Abbrechen</button>
           <button onclick="pwresetWeiter()" class="admin-success">Weiter</button>
