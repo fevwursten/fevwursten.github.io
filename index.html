@@ -1625,31 +1625,34 @@
             const w = parseInt(document.getElementById('wuerste').value) || 0;
             const b = parseInt(document.getElementById('brezn').value) || 0;
 
+            if (!name) {
+                alert('Bitte Namen eingeben!');
+                return;
+            }
+
             try {
                 const passwortHash = await hashPassword(passwort);
 
-                // STEP 1: Check existing order FIRST
-                console.log('Checking for existing order...');
-                let existing = null;
-                try {
-                    const checkResp = await fetch(`${APPS_SCRIPT_URL}?action=getMyOrder&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
-                    const checkData = await checkResp.json();
-                    if (checkData && checkData.success && checkData.hasOrder) {
-                        existing = checkData;
-                        console.log('Existing order found:', existing);
-                    }
-                } catch (e) {
-                    console.warn('getMyOrder failed (possibly user does not exist yet):', e);
+                // STEP 1: Check if order exists from local cache (no CORS issues!)
+                let existingOrder = null;
+                if (window.alleBestellungen && Array.isArray(window.alleBestellungen)) {
+                    existingOrder = window.alleBestellungen.find(order => 
+                        order.Name && order.Name.toLowerCase() === name.toLowerCase()
+                    );
                 }
 
-                // STEP 2: If existing order, show update modal
-                if (existing && existing.hasOrder) {
-                    const userConfirmed = await zeigeUpdateModal(existing.wuerste, existing.brezn, w, b);
+                // STEP 2: If existing order found, show update modal
+                if (existingOrder) {
+                    console.log('Existing order found in local cache:', existingOrder);
+                    const altW = parseInt(existingOrder.Wuerste) || 0;
+                    const altB = parseInt(existingOrder.Brezn) || 0;
+
+                    const userConfirmed = await zeigeUpdateModal(altW, altB, w, b);
                     if (!userConfirmed) {
                         console.log('User cancelled update');
                         return;
                     }
-                    console.log('User confirmed update, proceeding...');
+                    console.log('User confirmed update');
                 }
 
                 // STEP 3: Auto-register if user does not exist
@@ -1663,18 +1666,19 @@
                         const registerData = await registerResp.json();
 
                         if (!registerData.success) {
-                            throw new Error('Auto-Registrierung fehlgeschlagen: ' + (registerData.message || registerData.error));
+                            throw new Error('Registrierung fehlgeschlagen: ' + (registerData.message || registerData.error));
                         }
-                        console.log('✓ User automatically registered');
+                        console.log('✓ User registered');
                     }
                 } catch (regError) {
-                    console.error('Registration check failed:', regError);
-                    // Continue anyway - maybe user exists but login failed
+                    console.warn('Registration check failed:', regError);
+                    // Continue - maybe user exists already
                 }
 
                 // STEP 4: Create/Update order
                 const preisW = (typeof currentPreisWurst !== 'undefined') ? currentPreisWurst : 0;
                 const preisB = (typeof currentPreisBreze !== 'undefined') ? currentPreisBreze : 0;
+
                 const createResp = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${w}&brezn=${b}&preisWurst=${preisW}&preisBreze=${preisB}`);
                 const createData = await createResp.json();
 
@@ -1684,11 +1688,11 @@
 
                 alert('✓ Bestellung erfolgreich!');
                 document.getElementById('order-form').reset();
-                laden();
+                await laden(); // Reload orders
 
             } catch (error) {
                 console.error('Order error:', error);
-                alert('✗ Fehler: ' + error.message);
+                alert('✗ ' + error.message);
             }
         });
 
