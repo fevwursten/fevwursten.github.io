@@ -1475,166 +1475,94 @@
             });
         }
         
+        
+        // Lightweight confirmation modal for updating an existing order
+        async function zeigeUpdateModal(oldW, oldB, newW, newB) {
+            return confirm(`Bestehende Bestellung ändern?
+
+Alt: ${oldW} W, ${oldB} B
+Neu: ${newW} W, ${newB} B`);
+        }
+
         document.getElementById('order-form').addEventListener('submit', async e => {
             e.preventDefault();
-            
-            if (istEventGeschlossen()) {
+
+            if (istEventGeschlossen && istEventGeschlossen()) {
                 alert('Event wurde geschlossen!');
                 return;
             }
-            
+
             const submitBtn = e.target.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Wird verarbeitet...';
-            
+
             const name = document.getElementById('name').value.trim();
             const passwort = (document.getElementById('passwort').value || '').trim();
-            const wuerste = document.getElementById('wuerste').value;
-            const brezn = document.getElementById('brezn').value;
-            const passwortHash = await hashPassword(passwort);
-            
-            const w = parseInt(wuerste) || 0;
-            const b = parseInt(brezn) || 0;
-            
+            const w = parseInt(document.getElementById('wuerste').value) || 0;
+            const b = parseInt(document.getElementById('brezn').value) || 0;
+
             try {
-                if (w === 0 && b === 0) {
-                    const checkResponse = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
-                    const checkData = await checkResponse.json();
-                    
-                    if (checkData.success) {
-                        const orderResponse = await fetch(`${APPS_SCRIPT_URL}?action=getMyOrder&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
-                        const orderData = await orderResponse.json();
-                        
-                        if (!orderData.success || !orderData.hasOrder) {
-                            document.getElementById('error').textContent = '✗ Bitte mindestens 1 Wurst oder 1 Breze bestellen!';
-                            document.getElementById('error').style.display = 'block';
-                            setTimeout(() => {
-                                document.getElementById('error').style.display = 'none';
-                            }, 5000);
-                            submitBtn.disabled = false;
-                            submitBtn.textContent = 'Jetzt bestellen';
-                            return;
-                        }
-                    } else {
-                        document.getElementById('error').textContent = '✗ Bitte mindestens 1 Wurst oder 1 Breze bestellen!';
-                        document.getElementById('error').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('error').style.display = 'none';
-                        }, 5000);
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Jetzt bestellen';
-                        return;
-                    }
-                }
-                
-                const loginResponse = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
-                const loginData = await loginResponse.json();
-                
-                if (loginData.success) {
-                    if (loginData.requirePasswordReset === 'true') { zeigePasswortReset(name); submitBtn.disabled=false; submitBtn.textContent='Jetzt bestellen'; return; }, 5000);
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Jetzt bestellen';
-                        return;
-                    }
-                    
-                    const orderResponse = await fetch(`${APPS_SCRIPT_URL}?action=getMyOrder&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
-                    const orderData = await orderResponse.json();
-                    
-                    if (orderData.success && orderData.hasOrder) {
-                        const updateConfirmed = await zeigeUpdateModal(
-                            orderData.wuerste, 
-                            orderData.brezn, 
-                            wuerste, 
-                            brezn
-                        );
-                        
-                        if (!updateConfirmed) {
+                const passwortHash = await hashPassword(passwort);
+
+                // Check existing order
+                let existing = null;
+                try {
+                    const checkResp = await fetch(`${APPS_SCRIPT_URL}?action=getMyOrder&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
+                    const checkData = await checkResp.json();
+                    if (checkData && checkData.success && checkData.hasOrder) existing = checkData;
+                } catch (e) { /* ignore */ }
+
+                if (existing) {
+                    // Ask if quantities differ
+                    if (Number(existing.wuerste) !== w || Number(existing.brezn) !== b) {
+                        const ok = await zeigeUpdateModal(existing.wuerste, existing.brezn, w, b);
+                        if (!ok) {
                             submitBtn.disabled = false;
                             submitBtn.textContent = 'Jetzt bestellen';
                             return;
                         }
                     }
-                    
-                    const createResponse = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${wuerste}&brezn=${brezn}&preisWurst=${currentPreisWurst}&preisBreze=${currentPreisBreze}`);
-                    const createData = await createResponse.json();
-                    
-                    if (createData.success) {
-                        document.getElementById('success').textContent = createData.updated ? '✓ Bestellung aktualisiert!' : '✓ Bestellung erfolgreich!';
+                    const updResp = await fetch(`${APPS_SCRIPT_URL}?action=update&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${w}&brezn=${b}`);
+                    const updData = await updResp.json();
+                    if (updData && updData.success) {
+                        document.getElementById('success').textContent = '✓ Bestellung aktualisiert!';
                         document.getElementById('success').style.display = 'block';
                         document.getElementById('error').style.display = 'none';
-                        
-                        document.getElementById('order-form').reset();
-                        updateOrderPreview();
-                        
-                        setTimeout(() => {
-                            document.getElementById('success').style.display = 'none';
-                            laden();
-                        }, 5000);
                     } else {
-                        document.getElementById('error').textContent = '✗ Fehler beim Speichern!';
-                        document.getElementById('error').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('error').style.display = 'none';
-                        }, 5000);
+                        throw new Error(updData && (updData.message || updData.error) || 'Update fehlgeschlagen');
                     }
-                    
-                } else if (loginData.error === 'user_not_found') {
-                    const registerResponse = await fetch(`${APPS_SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
-                    const registerData = await registerResponse.json();
-                    
-                    if (registerData.success) {
-                        const createResponse = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${wuerste}&brezn=${brezn}&preisWurst=${currentPreisWurst}&preisBreze=${currentPreisBreze}`);
-                        const createData = await createResponse.json();
-                        
-                        if (createData.success) {
-                            document.getElementById('success').textContent = '✓ Bestellung erfolgreich!';
-                            document.getElementById('success').style.display = 'block';
-                            document.getElementById('error').style.display = 'none';
-                            
-                            document.getElementById('order-form').reset();
-                            updateOrderPreview();
-                            
-                            setTimeout(() => {
-                                document.getElementById('success').style.display = 'none';
-                                laden();
-                            }, 5000);
-                        }
-                    } else {
-                        document.getElementById('error').textContent = '✗ ' + (registerData.message || 'Registrierung fehlgeschlagen!');
-                        document.getElementById('error').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('error').style.display = 'none';
-                        }, 5000);
-                    }
-                    
-                } else if (loginData.error === 'wrong_password') {
-                    document.getElementById('error').textContent = '✗ Falsches Passwort!';
-                    document.getElementById('error').style.display = 'block';
-                    setTimeout(() => {
-                        document.getElementById('error').style.display = 'none';
-                    }, 5000);
                 } else {
-                    document.getElementById('error').textContent = '✗ ' + (loginData.message || 'Fehler!');
-                    document.getElementById('error').style.display = 'block';
-                    setTimeout(() => {
+                    // Create new order (needs prices)
+                    const preisW = (typeof currentPreisWurst !== 'undefined') ? currentPreisWurst : 0;
+                    const preisB = (typeof currentPreisBreze !== 'undefined') ? currentPreisBreze : 0;
+                    const crtResp = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${w}&brezn=${b}&preisWurst=${preisW}&preisBreze=${preisB}`);
+                    const crtData = await crtResp.json();
+                    if (crtData && crtData.success) {
+                        document.getElementById('success').textContent = '✓ Bestellung erfolgreich!';
+                        document.getElementById('success').style.display = 'block';
                         document.getElementById('error').style.display = 'none';
-                    }, 5000);
+                    } else {
+                        throw new Error(crtData && (crtData.message || crtData.error) || 'Erstellen fehlgeschlagen');
+                    }
                 }
-                
-            } catch (e) {
-                console.error('Fehler:', e);
-                document.getElementById('error').textContent = '✗ Verbindungsfehler!';
+
+                // Reset form & refresh
+                document.getElementById('order-form').reset();
+                if (typeof updateOrderPreview === 'function') updateOrderPreview();
+                if (typeof laden === 'function') try { await laden(); } catch(e){}
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('error').textContent = '✗ ' + (err.message || 'Unbekannter Fehler');
                 document.getElementById('error').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('error').style.display = 'none';
-                }, 5000);
+                document.getElementById('success').style.display = 'none';
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Jetzt bestellen';
             }
         });
-        
-        function laden() {
+
+function laden() {
             fetch(APPS_SCRIPT_URL)
                 .then(r => r.json())
                 .then(data => {
@@ -1948,15 +1876,24 @@ function ladeHistorie() {
                 schliesseUpdateModal(false);
             }
         }
-        
-        ladeArchivierungsStatus(function() {
-            initDatum();
-            ladePreise();
-            laden();
-            ladeHistorie();
+
+        // Initialisierung nach DOM-Ready
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                ladeArchivierungsStatus(function() {
+                    initDatum();
+                    ladePreise();
+                    laden();
+                    ladeHistorie();
+                });
+            } catch (e) {
+                console.error('Init-Fehler:', e);
+                const els = document.querySelectorAll('.loading, .load-placeholder');
+                els.forEach(el => el.textContent = 'Fehler beim Laden');
+            }
         });
 
-        // ===== Passwort-Reset Flow (2-Wege) =====
+// ===== Passwort-Reset Flow (2-Wege) =====
         let pendingResetName = null;
 
         function zeigePasswortReset(name) {
