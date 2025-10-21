@@ -1620,11 +1620,7 @@
                 return;
             }
 
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Wird verarbeitet...';
-
-            const name = document.getElementById('name').value.trim();
+            const name = (document.getElementById('name').value || '').trim();
             const passwort = (document.getElementById('passwort').value || '').trim();
             const w = parseInt(document.getElementById('wuerste').value) || 0;
             const b = parseInt(document.getElementById('brezn').value) || 0;
@@ -1632,96 +1628,67 @@
             try {
                 const passwortHash = await hashPassword(passwort);
 
-                // AUTO-REGISTRATION: Check if user exists, register if not (WITH password hash)
-                console.log('Checking if user exists...');
-                try {
-                    const userCheckResp = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
-                    const userCheckData = await userCheckResp.json();
-
-                    if (userCheckData.error === 'user_not_found') {
-                        console.log('User not found, auto-registering WITH hash...');
-                        const registerResp = await fetch(`${APPS_SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
-                        const registerData = await registerResp.json();
-
-                        if (!registerData.success) {
-                            throw new Error('Auto-Registrierung fehlgeschlagen: ' + (registerData.message || registerData.error || 'Unbekannter Fehler'));
-                        }
-                        console.log('✓ User automatically registered with password hash');
-                    } else if (userCheckData.success) {
-                        console.log('✓ User already exists');
-                    }
-                } catch (regError) {
-                    console.error('Registration check failed:', regError);
-                    throw new Error('Benutzerprüfung fehlgeschlagen: ' + regError.message);
-                }
-
-                
-                // Probe: if admin reset is active, open reset dialog and block ordering
-                try {
-                    const probe = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
-                    const probeData = await probe.json();
-                    if (probeData && (probeData.requirePasswordReset === 'true' || probeData.error === 'password_reset_required')) {
-                        zeigePasswortReset(name);
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'Jetzt bestellen';
-                        return;
-                    }
-                } catch(e) { /* ignore probe errors; fallback to normal flow */ }
-// Check existing order
+                // STEP 1: Check existing order FIRST
+                console.log('Checking for existing order...');
                 let existing = null;
                 try {
                     const checkResp = await fetch(`${APPS_SCRIPT_URL}?action=getMyOrder&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
                     const checkData = await checkResp.json();
-                    if (checkData && checkData.success && checkData.hasOrder) existing = checkData;
-                } catch (e) { /* ignore */ }
-
-                if (existing) {
-                    // Ask if quantities differ
-                    if (Number(existing.wuerste) !== w || Number(existing.brezn) !== b) {
-                        const ok = await zeigeUpdateModal(existing.wuerste, existing.brezn, w, b);
-                        if (!ok) {
-                            submitBtn.disabled = false;
-                            submitBtn.textContent = 'Jetzt bestellen';
-                            return;
-                        }
+                    if (checkData && checkData.success && checkData.hasOrder) {
+                        existing = checkData;
+                        console.log('Existing order found:', existing);
                     }
-                    const updResp = await fetch(`${APPS_SCRIPT_URL}?action=update&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${w}&brezn=${b}`);
-                    const updData = await updResp.json();
-                    if (updData && updData.success) {
-                        document.getElementById('success').textContent = '✓ Bestellung aktualisiert!';
-                        document.getElementById('success').style.display = 'block';
-                        document.getElementById('error').style.display = 'none';
-                    } else {
-                        throw new Error(updData && (updData.message || updData.error) || 'Update fehlgeschlagen');
-                    }
-                } else {
-                    // Create new order (needs prices)
-                    const preisW = (typeof currentPreisWurst !== 'undefined') ? currentPreisWurst : 0;
-                    const preisB = (typeof currentPreisBreze !== 'undefined') ? currentPreisBreze : 0;
-                    const crtResp = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${w}&brezn=${b}&preisWurst=${preisW}&preisBreze=${preisB}`);
-                    const crtData = await crtResp.json();
-                    if (crtData && crtData.success) {
-                        document.getElementById('success').textContent = '✓ Bestellung erfolgreich!';
-                        document.getElementById('success').style.display = 'block';
-                        document.getElementById('error').style.display = 'none';
-                    } else {
-                        throw new Error(crtData && (crtData.message || crtData.error) || 'Erstellen fehlgeschlagen');
-                    }
+                } catch (e) {
+                    console.warn('getMyOrder failed (possibly user does not exist yet):', e);
                 }
 
-                // Reset form & refresh
-                document.getElementById('order-form').reset();
-                if (typeof updateOrderPreview === 'function') updateOrderPreview();
-                if (typeof laden === 'function') try { await laden(); } catch(e){}
+                // STEP 2: If existing order, show update modal
+                if (existing && existing.hasOrder) {
+                    const userConfirmed = await zeigeUpdateModal(existing.wuerste, existing.brezn, w, b);
+                    if (!userConfirmed) {
+                        console.log('User cancelled update');
+                        return;
+                    }
+                    console.log('User confirmed update, proceeding...');
+                }
 
-            } catch (err) {
-                console.error(err);
-                document.getElementById('error').textContent = '✗ ' + (err.message || 'Unbekannter Fehler');
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('success').style.display = 'none';
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Jetzt bestellen';
+                // STEP 3: Auto-register if user does not exist
+                try {
+                    const loginCheckResp = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
+                    const loginCheckData = await loginCheckResp.json();
+
+                    if (loginCheckData.error === 'user_not_found') {
+                        console.log('User not found, auto-registering...');
+                        const registerResp = await fetch(`${APPS_SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
+                        const registerData = await registerResp.json();
+
+                        if (!registerData.success) {
+                            throw new Error('Auto-Registrierung fehlgeschlagen: ' + (registerData.message || registerData.error));
+                        }
+                        console.log('✓ User automatically registered');
+                    }
+                } catch (regError) {
+                    console.error('Registration check failed:', regError);
+                    // Continue anyway - maybe user exists but login failed
+                }
+
+                // STEP 4: Create/Update order
+                const preisW = (typeof currentPreisWurst !== 'undefined') ? currentPreisWurst : 0;
+                const preisB = (typeof currentPreisBreze !== 'undefined') ? currentPreisBreze : 0;
+                const createResp = await fetch(`${APPS_SCRIPT_URL}?action=create&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}&wuerste=${w}&brezn=${b}&preisWurst=${preisW}&preisBreze=${preisB}`);
+                const createData = await createResp.json();
+
+                if (!createData.success) {
+                    throw new Error(createData.message || createData.error || 'Bestellung fehlgeschlagen');
+                }
+
+                alert('✓ Bestellung erfolgreich!');
+                document.getElementById('order-form').reset();
+                laden();
+
+            } catch (error) {
+                console.error('Order error:', error);
+                alert('✗ Fehler: ' + error.message);
             }
         });
 
