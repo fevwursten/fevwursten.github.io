@@ -815,11 +815,23 @@
 
     <div id="update-modal" class="modal">
         <div class="modal-content">
-            <h3>Bestellung aktualisieren?</h3>
-            <p id="update-modal-text">Du hast bereits bestellt.</p>
+            <h3>Bestellung ändern</h3>
+            <p style="margin-bottom: 15px;">Möchtest du deine bestehende Bestellung ändern?</p>
+
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #b9052d;">
+                <div style="margin-bottom: 12px;">
+                    <strong style="color: #6e031b;">Aktuelle Bestellung:</strong><br>
+                    <span id="current-order-display" style="font-size: 16px;"></span>
+                </div>
+                <div>
+                    <strong style="color: #6e031b;">Neue Bestellung:</strong><br>
+                    <span id="new-order-display" style="font-size: 16px;"></span>
+                </div>
+            </div>
+
             <div class="modal-buttons">
                 <button onclick="schliesseUpdateModal(false)" style="background: #999;">Abbrechen</button>
-                <button onclick="schliesseUpdateModal(true)" class="admin-success">Aktualisieren</button>
+                <button onclick="schliesseUpdateModal(true)" class="admin-success">Bestellung ändern</button>
             </div>
         </div>
     </div>
@@ -1583,12 +1595,21 @@
         }
         
         
-        // Lightweight confirmation modal for updating an existing order
-        async function zeigeUpdateModal(oldW, oldB, newW, newB) {
-            return confirm(`Bestehende Bestellung ändern?
+        // Modal-based confirmation for updating an existing order
+        async function zeigeUpdateModal(altW, altB, neuW, neuB) {
+            return new Promise((resolve) => {
+                updateModalResolve = resolve;
+                const altWurstText = pluralize(altW, 'Wurst', 'Würste');
+                const neuWurstText = pluralize(neuW, 'Wurst', 'Würste');
 
-Alt: ${oldW} W, ${oldB} B
-Neu: ${newW} W, ${newB} B`);
+                const altOrder = '🌭 ' + altW + ' ' + altWurstText + ', ' + altB + ' Brezn';
+                const neuOrder = '🌭 ' + neuW + ' ' + neuWurstText + ', ' + neuB + ' Brezn';
+
+                document.getElementById('current-order-display').innerHTML = altOrder;
+                document.getElementById('new-order-display').innerHTML = neuOrder;
+
+                document.getElementById('update-modal').style.display = 'block';
+            });
         }
 
         document.getElementById('order-form').addEventListener('submit', async e => {
@@ -1611,21 +1632,21 @@ Neu: ${newW} W, ${newB} B`);
             try {
                 const passwortHash = await hashPassword(passwort);
 
-                // AUTO-REGISTRATION: Check if user exists, register if not
+                // AUTO-REGISTRATION: Check if user exists, register if not (WITH password hash)
                 console.log('Checking if user exists...');
                 try {
                     const userCheckResp = await fetch(`${APPS_SCRIPT_URL}?action=login&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
                     const userCheckData = await userCheckResp.json();
 
                     if (userCheckData.error === 'user_not_found') {
-                        console.log('User not found, auto-registering...');
-                        const registerResp = await fetch(`${APPS_SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}`);
+                        console.log('User not found, auto-registering WITH hash...');
+                        const registerResp = await fetch(`${APPS_SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}&hash=${encodeURIComponent(passwortHash)}`);
                         const registerData = await registerResp.json();
 
                         if (!registerData.success) {
                             throw new Error('Auto-Registrierung fehlgeschlagen: ' + (registerData.message || registerData.error || 'Unbekannter Fehler'));
                         }
-                        console.log('✓ User automatically registered');
+                        console.log('✓ User automatically registered with password hash');
                     } else if (userCheckData.success) {
                         console.log('✓ User already exists');
                     }
