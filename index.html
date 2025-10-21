@@ -1620,8 +1620,8 @@ if (data.success) {
         }
 
         document.getElementById('order-form').addEventListener('submit', async e => {
-            
-            if (isSubmitting) return; isSubmitting = True;e.preventDefault();
+            e.preventDefault();
+            if (isSubmitting) return; isSubmitting = true;
 
             if (istEventGeschlossen && istEventGeschlossen()) {
                 alert('Event wurde geschlossen!');
