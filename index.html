@@ -390,77 +390,82 @@ async function loadPricesOnPageLoad() {
     }
 }
 
-async function checkEventStatusBestellung() {
+async function loadPricesAndEventStatus() {
     try {
-        const statusResponse = await fetch(`${API_URL}?type=status`);
-        const statusData = await statusResponse.json();
-        const ordersResponse = await fetch(`${API_URL}?action=getAllOrders`);
-        const ordersData = await ordersResponse.json();
-        const now = new Date();
-        let hasActiveEvent = false;
-        let eventInfo = '';
+        const response = await fetch(`${API_URL}?type=preise`);
+        const data = await response.json();
         
-        if (statusData.ausserplanmaessigDeadline) {
-            const deadline = new Date(statusData.ausserplanmaessigDeadline);
-            hasActiveEvent = deadline > now;
-            if (hasActiveEvent) {
-                eventInfo = 'Bestellschluss: ' + deadline.toLocaleString('de-DE', { 
-                    weekday: 'long', 
+        if (data.success) {
+            // Preise setzen
+            currentPreisWurst = data.preisWurst;
+            currentPreisBreze = data.preisBreze;
+            document.getElementById('displayPreisWurst').textContent = currentPreisWurst.toFixed(2).replace('.', ',');
+            document.getElementById('displayPreisBreze').textContent = currentPreisBreze.toFixed(2).replace('.', ',');
+            document.getElementById('preisInfo').style.display = 'block';
+            
+            // Event-Status prüfen
+            const now = new Date();
+            let hasActiveEvent = false;
+            let eventInfo = '';
+            
+            if (data.ausserplanmaessigDeadline) {
+                const deadline = new Date(data.ausserplanmaessigDeadline);
+                hasActiveEvent = deadline > now;
+                if (hasActiveEvent) {
+                    eventInfo = 'Bestellschluss: ' + deadline.toLocaleString('de-DE', { 
+                        weekday: 'long', 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric',
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                }
+            } else if (data.freigeschaltet) {
+                hasActiveEvent = true;
+                const nextFriday = new Date();
+                const daysUntilFriday = (5 - nextFriday.getDay() + 7) % 7 || 7;
+                nextFriday.setDate(nextFriday.getDate() + daysUntilFriday);
+                nextFriday.setHours(12, 0, 0, 0);
+                const fridayMorning = new Date(nextFriday);
+                fridayMorning.setHours(9, 0, 0, 0);
+                eventInfo = 'Freitags-Event am ' + nextFriday.toLocaleDateString('de-DE', { 
                     day: '2-digit', 
                     month: '2-digit', 
-                    year: 'numeric',
-                    hour: '2-digit', 
-                    minute: '2-digit' 
+                    year: 'numeric' 
+                }) + ' um 12:00 Uhr - Bestellschluss: ' + fridayMorning.toLocaleDateString('de-DE', { 
+                    weekday: 'long',
+                    day: '2-digit', 
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
                 });
             }
-        } else if (statusData.freigeschaltet) {
-            hasActiveEvent = true;
-            // Freitags-Event - berechne nächsten Freitag 12:00 Uhr
-            const nextFriday = new Date();
-            const daysUntilFriday = (5 - nextFriday.getDay() + 7) % 7 || 7;
-            nextFriday.setDate(nextFriday.getDate() + daysUntilFriday);
-            nextFriday.setHours(12, 0, 0, 0);
             
-            const fridayMorning = new Date(nextFriday);
-            fridayMorning.setHours(9, 0, 0, 0);
+            const subtitle = document.getElementById('bestellungSubtitle');
+            const orderForm = document.getElementById('orderForm');
+            const eventWarning = document.getElementById('eventClosedWarning');
             
-            eventInfo = 'Freitags-Event am ' + nextFriday.toLocaleDateString('de-DE', { 
-                day: '2-digit', 
-                month: '2-digit', 
-                year: 'numeric' 
-            }) + ' um 12:00 Uhr - Bestellschluss: ' + fridayMorning.toLocaleDateString('de-DE', { 
-                weekday: 'long',
-                day: '2-digit', 
-                month: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } else if (ordersData.success && ordersData.orders && ordersData.orders.length > 0) {
-            // Event läuft, aber kein explizites Datum gesetzt
-            hasActiveEvent = true;
-            eventInfo = 'Event aktiv - Bestellungen möglich (keine Deadline gesetzt)';
-        }
-        
-        const subtitle = document.getElementById('bestellungSubtitle');
-        const orderForm = document.getElementById('orderForm');
-        const eventWarning = document.getElementById('eventClosedWarning');
-        
-        if (hasActiveEvent) {
-            subtitle.textContent = eventInfo;
-            orderForm.style.display = 'block';
-            eventWarning.style.display = 'none';
-        } else {
-            subtitle.textContent = 'Derzeit kein aktives Event';
-            orderForm.style.display = 'none';
-            eventWarning.style.display = 'block';
+            if (hasActiveEvent) {
+                subtitle.textContent = eventInfo;
+                orderForm.style.display = 'block';
+                eventWarning.style.display = 'none';
+            } else {
+                subtitle.textContent = 'Derzeit kein aktives Event';
+                orderForm.style.display = 'none';
+                eventWarning.style.display = 'block';
+            }
         }
     } catch (error) {
         console.error('Fehler:', error);
+        document.getElementById('bestellungSubtitle').textContent = 'Event-Status konnte nicht geladen werden';
+        document.getElementById('orderForm').style.display = 'block';
     }
 }
 
-loadPricesOnPageLoad();
-checkEventStatusBestellung();
+// Nur EINEN Call beim Laden
+loadPricesAndEventStatus();
+
 
 function updateTotalSum() {
     const wuerste = parseInt(document.getElementById('wuerste').value) || 0;
@@ -1121,4 +1126,5 @@ async function confirmNewEvent() {
 </script>
 </body>
 </html>
+
 
