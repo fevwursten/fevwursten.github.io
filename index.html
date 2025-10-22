@@ -554,7 +554,7 @@ async function confirmUpdate() {
             document.getElementById('wuerste').value = 0;
             document.getElementById('brezn').value = 0;
             updateTotalSum();
-            await checkEventStatusBestellung();
+            await loadPricesAndEventStatus();
         } else {
             showMessage(orderData.message || 'Fehler beim Speichern!', 'error', 'Bestellung');
         }
@@ -612,7 +612,7 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             document.getElementById('wuerste').value = 0;
             document.getElementById('brezn').value = 0;
             updateTotalSum();
-            await checkEventStatusBestellung();
+            await loadPricesAndEventStatus();
         } else {
             showMessage(orderData.message || 'Fehler beim Speichern!', 'error', 'Bestellung');
         }
