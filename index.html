@@ -63,45 +63,6 @@
         .modal-buttons .btn { flex: 1; }
         .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-		.language-switcher {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 8px;
-            z-index: 100;
-        }
-        .lang-btn {
-            background: white;
-            border: 2px solid #e1e8ed;
-            border-radius: 6px;
-            padding: 6px 12px;
-            cursor: pointer;
-            font-size: 20px;
-            transition: all 0.3s;
-        }
-        .lang-btn:hover {
-            border-color: #667eea;
-            transform: scale(1.1);
-        }
-        .lang-btn.active {
-            border-color: #667eea;
-            background: #667eea;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }
-        @media (max-width: 600px) {
-            .language-switcher {
-                top: 10px;
-                right: 10px;
-                gap: 4px;
-            }
-            .lang-btn {
-                padding: 4px 8px;
-                font-size: 16px;
-            }
-        }
-		
-		
 		.form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -118,13 +79,6 @@
 </head>
 <body>
 <div class="container">
-<div class="language-switcher">
-    <button class="lang-btn active" onclick="setLanguage('de')" title="Deutsch">🇩🇪</button>
-    <button class="lang-btn" onclick="setLanguage('bar')" title="Boarisch">🥨</button>
-    <button class="lang-btn" onclick="setLanguage('en')" title="English">🇬🇧</button>
-    <button class="lang-btn" onclick="setLanguage('ro')" title="Română">🇷🇴</button>
-    <button class="lang-btn" onclick="setLanguage('hi')" title="हिन्दी">🇮🇳</button>
-</div>
 <div class="tab-navigation">
     <button class="tab-button active" onclick="switchTab('bestellung')">🥨 Bestellung</button>
     <button class="tab-button" onclick="switchTab('uebersicht')">📊 Übersicht</button>
@@ -133,65 +87,36 @@
 <div id="tab-bestellung" class="tab-content active">
 <div class="header">
     <div class="icon">🥨</div>
-	    <h1 data-i18n="title">Weißwurst Bestellung</h1>
-        <h2 id="eventDatum" style="font-size: 24px; color: #667eea; margin: 16px 0 8px 0; font-weight: 600;">
-            <span data-i18n="loading">Lädt Event-Informationen...</span>
-        </h2>
-        <p class="subtitle" id="bestellungSubtitle" style="font-size: 14px; color: #999;">
-            <span data-i18n="deadline-loading">Bestellschluss wird geladen...</span>
-        </p>
     <h1>Weißwurst Bestellung</h1>
     <h2 id="eventDatum" style="font-size: 24px; color: #667eea; margin: 16px 0 8px 0; font-weight: 600;">Lädt Event-Informationen...</h2>
     <p class="subtitle" id="bestellungSubtitle" style="font-size: 14px; color: #999;">Bestellschluss wird geladen...</p>
 </div>
 
     <div id="messageBestellung" class="message"></div>
-<div id="eventClosedWarning" class="info-box warning" style="display: none;">
-    ⚠️ <strong><span data-i18n="no-event">Derzeit kein aktives Event</span></strong><br>
-    <span data-i18n="no-orders">Es können momentan keine Bestellungen aufgegeben werden.</span>
-</div>
-<form id="orderForm">
+    <div id="eventClosedWarning" class="info-box warning" style="display: none;">
+        ⚠️ <strong>Derzeit kein aktives Event</strong><br>
+        Es können momentan keine Bestellungen aufgegeben werden.
+    </div>
+	<form id="orderForm">
     <div class="form-row">
         <div class="form-group">
-        
-            <!-- ⬇️⬇️⬇️ ERSETZEN - Label und Input ⬇️⬇️⬇️ -->
-            
-            <label for="orderName" data-i18n="username">Benutzername</label>
-            <input type="text" id="orderName" data-i18n-placeholder="username-placeholder" placeholder="Dein Name" required autocomplete="username">
-            
-            <!-- ⬆️⬆️⬆️ BIS HIER ⬆️⬆️⬆️ -->
-            
+            <label for="orderName">Benutzername</label>
+            <input type="text" id="orderName" placeholder="Dein Name" required autocomplete="username">
         </div>
         <div class="form-group">
-        
-            <!-- ⬇️⬇️⬇️ ERSETZEN - Label und Input ⬇️⬇️⬇️ -->
-            
-            <label for="orderPassword" data-i18n="password">Passwort (optional)</label>
-            <input type="password" id="orderPassword" data-i18n-placeholder="password-placeholder" placeholder="Nur eingeben falls gesetzt" autocomplete="current-password">
-            
-            <!-- ⬆️⬆️⬆️ BIS HIER ⬆️⬆️⬆️ -->
-            
+            <label for="orderPassword">Passwort (optional)</label>
+            <input type="password" id="orderPassword" placeholder="Nur eingeben falls gesetzt" autocomplete="current-password">
         </div>
     </div>
     
-    <!-- ⬇️⬇️⬇️ ERSETZEN - Password Hint ⬇️⬇️⬇️ -->
-    
-    <p class="password-hint" style="margin-top: -12px; margin-bottom: 20px;" data-i18n="password-hint">Leer lassen, wenn du kein Passwort hast</p>
-    
-    <!-- ⬆️⬆️⬆️ BIS HIER ⬆️⬆️⬆️ -->
+    <p class="password-hint" style="margin-top: -12px; margin-bottom: 20px;">Leer lassen, wenn du kein Passwort hast</p>
     
     <div id="emptyPasswordWarningBestellung" style="display: none;">
         <div class="checkbox-container">
             <input type="checkbox" id="confirmEmptyPasswordBestellung">
-            
-            <!-- ⬇️⬇️⬇️ ERSETZEN - Checkbox Label ⬇️⬇️⬇️ -->
-            
-            <label for="confirmEmptyPasswordBestellung" data-i18n="checkbox-warning">
+            <label for="confirmEmptyPasswordBestellung">
                 <strong>⚠️ Ich verstehe:</strong> Ohne Passwort kann jeder unter meinem Namen bestellen.
             </label>
-            
-            <!-- ⬆️⬆️⬆️ BIS HIER ⬆️⬆️⬆️ -->
-            
         </div>
     </div>
     
@@ -199,48 +124,25 @@
     
     <div class="form-row">
         <div class="form-group">
-        
-            <!-- ⬇️⬇️⬇️ ERSETZEN - Würste Label ⬇️⬇️⬇️ -->
-            
             <label for="wuerste">
                 <img src="https://fevwursten.github.io/weisswurst.png" alt="Weißwurst" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;">
-                <span data-i18n="wurst-label">Anzahl Weißwürste</span>
+                Anzahl Weißwürste
             </label>
-            
-            <!-- ⬆️⬆️⬆️ BIS HIER ⬆️⬆️⬆️ -->
-            
             <input type="number" id="wuerste" min="0" value="0" required autocomplete="off">
         </div>
         <div class="form-group">
-        
-            <!-- ⬇️⬇️⬇️ ERSETZEN - Brezn Label ⬇️⬇️⬇️ -->
-            
-            <label for="brezn" data-i18n="brezel-label">🥨 Anzahl Brezn</label>
-            
-            <!-- ⬆️⬆️⬆️ BIS HIER ⬆️⬆️⬆️ -->
-            
+            <label for="brezn">🥨 Anzahl Brezn</label>
             <input type="number" id="brezn" min="0" value="0" required autocomplete="off">
         </div>
     </div>
     
     <div class="info-box" id="preisInfo" style="display: none;">
-    
-        <!-- ⬇️⬇️⬇️ ERSETZEN - Preis Info ⬇️⬇️⬇️ -->
-        
-        <strong><span data-i18n="current-prices">Aktuelle Preise:</span></strong><br>
+        <strong>Aktuelle Preise:</strong><br>
         Weißwurst: <span id="displayPreisWurst">0,00</span> € | Breze: <span id="displayPreisBreze">0,00</span> €<br>
-        <strong><span data-i18n="your-total">Deine Summe:</span> <span id="totalSum">0,00</span> €</strong>
-        
-        <!-- ⬆️⬆️⬆️ BIS HIER ⬆️⬆️⬆️ -->
-        
+        <strong>Deine Summe: <span id="totalSum">0,00</span> €</strong>
     </div>
     
-    <!-- ⬇️⬇️⬇️ ERSETZEN - Submit Button ⬇️⬇️⬇️ -->
-    
-    <button type="submit" class="btn btn-primary btn-full" id="orderSubmitBtn" data-i18n="submit-btn">Bestellung absenden</button>
-    
-    <!-- ⬆️⬆️⬆️ BIS HIER ⬆️⬆️⬆️ -->
-    
+    <button type="submit" class="btn btn-primary btn-full" id="orderSubmitBtn">Bestellung absenden</button>
 </form>
 
 </div>
@@ -490,135 +392,6 @@
     </div>
 </div>
 <script>
-const translations = {
-    de: {
-        'title': 'Weißwurst Bestellung',
-        'loading': 'Lädt Event-Informationen...',
-        'deadline-loading': 'Bestellschluss wird geladen...',
-        'username': 'Benutzername',
-        'username-placeholder': 'Dein Name',
-        'password': 'Passwort (optional)',
-        'password-placeholder': 'Nur eingeben falls gesetzt',
-        'password-hint': 'Leer lassen, wenn du kein Passwort hast',
-        'checkbox-warning': '⚠️ Ich verstehe: Ohne Passwort kann jeder unter meinem Namen bestellen.',
-        'wurst-label': 'Anzahl Weißwürste',
-        'brezel-label': '🥨 Anzahl Brezn',
-        'submit-btn': 'Bestellung absenden',
-        'current-prices': 'Aktuelle Preise:',
-        'your-total': 'Deine Summe:',
-        'no-event': 'Derzeit kein aktives Event',
-        'no-orders': 'Es können momentan keine Bestellungen aufgegeben werden.'
-    },
-    bar: {
-        'title': 'Weißwuascht Bstöijung',
-        'loading': 'Load Eventinfos...',
-        'deadline-loading': 'Bstöijschluss werd gload...',
-        'username': 'Benutzanama',
-        'username-placeholder': 'Dei Nama',
-        'password': 'Passwort (fakultativ)',
-        'password-placeholder': 'Nur eigem wennst oans host',
-        'password-hint': 'Leer lossn, wennst koa Passwort host',
-        'checkbox-warning': '⚠️ I vasteh: Ohne Passwort ko jeda unter meim Nama bstöin.',
-        'wurst-label': 'Wievui Weißwuascht',
-        'brezel-label': '🥨 Wievui Brezn',
-        'submit-btn': 'Bstöijung obschicka',
-        'current-prices': 'Aktueje Preise:',
-        'your-total': 'Dei Summ:',
-        'no-event': 'Momentan koa aktives Event',
-        'no-orders': 'Ma ko grad koane Bstöijunga machen.'
-    },
-    en: {
-        'title': 'Weißwurst Order',
-        'loading': 'Loading event information...',
-        'deadline-loading': 'Loading order deadline...',
-        'username': 'Username',
-        'username-placeholder': 'Your name',
-        'password': 'Password (optional)',
-        'password-placeholder': 'Only enter if set',
-        'password-hint': 'Leave empty if you don\'t have a password',
-        'checkbox-warning': '⚠️ I understand: Without password anyone can order under my name.',
-        'wurst-label': 'Number of Weißwurst',
-        'brezel-label': '🥨 Number of Pretzels',
-        'submit-btn': 'Submit Order',
-        'current-prices': 'Current Prices:',
-        'your-total': 'Your Total:',
-        'no-event': 'Currently no active event',
-        'no-orders': 'No orders can be placed at this time.'
-    },
-    ro: {
-        'title': 'Comandă Weißwurst',
-        'loading': 'Se încarcă informațiile evenimentului...',
-        'deadline-loading': 'Se încarcă termenul limită...',
-        'username': 'Nume utilizator',
-        'username-placeholder': 'Numele tău',
-        'password': 'Parolă (opțional)',
-        'password-placeholder': 'Introduceți doar dacă este setat',
-        'password-hint': 'Lăsați gol dacă nu aveți o parolă',
-        'checkbox-warning': '⚠️ Înțeleg: Fără parolă oricine poate comanda pe numele meu.',
-        'wurst-label': 'Număr de Weißwurst',
-        'brezel-label': '🥨 Număr de covrigei',
-        'submit-btn': 'Trimite Comanda',
-        'current-prices': 'Prețuri curente:',
-        'your-total': 'Totalul tău:',
-        'no-event': 'Niciun eveniment activ',
-        'no-orders': 'Nu se pot plasa comenzi în acest moment.'
-    },
-    hi: {
-        'title': 'Weißwurst ऑर्डर',
-        'loading': 'इवेंट जानकारी लोड हो रही है...',
-        'deadline-loading': 'डेडलाइन लोड हो रही है...',
-        'username': 'यूज़रनेम',
-        'username-placeholder': 'आपका नाम',
-        'password': 'पासवर्ड (वैकल्पिक)',
-        'password-placeholder': 'केवल सेट होने पर दर्ज करें',
-        'password-hint': 'यदि आपके पास पासवर्ड नहीं है तो खाली छोड़ दें',
-        'checkbox-warning': '⚠️ मैं समझता हूं: पासवर्ड के बिना कोई भी मेरे नाम पर ऑर्डर कर सकता है।',
-        'wurst-label': 'Weißwurst की संख्या',
-        'brezel-label': '🥨 ब्रेज़ेल की संख्या',
-        'submit-btn': 'ऑर्डर सबमिट करें',
-        'current-prices': 'वर्तमान मूल्य:',
-        'your-total': 'आपकी कुल राशि:',
-        'no-event': 'वर्तमान में कोई इवेंट नहीं',
-        'no-orders': 'इस समय ऑर्डर नहीं दिए जा सकते।'
-    }
-};
-
-let currentLang = 'de';
-
-function setLanguage(lang) {
-    currentLang = lang;
-    localStorage.setItem('preferredLanguage', lang);
-    
-    // Update active button
-    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    // Update texts
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (translations[lang] && translations[lang][key]) {
-            el.textContent = translations[lang][key];
-        }
-    });
-    
-    // Update placeholders
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-i18n-placeholder');
-        if (translations[lang] && translations[lang][key]) {
-            el.placeholder = translations[lang][key];
-        }
-    });
-}
-
-// Load saved language on page load
-window.addEventListener('DOMContentLoaded', () => {
-    const savedLang = localStorage.getItem('preferredLanguage') || 'de';
-    const langBtn = document.querySelector(`.lang-btn[onclick*="${savedLang}"]`);
-    if (langBtn) {
-        langBtn.classList.add('active');
-        setLanguage(savedLang);
-    }
-});
 const API_URL = 'https://script.google.com/macros/s/AKfycbyc-i8lmUFvpJ5QxZ2EOo8FbegOnH0ez9vyBIGDynZtu12mOUtTMHKlbz4XqXls2EbwwA/exec';
 const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
@@ -1477,5 +1250,4 @@ async function confirmNewEvent() {
 </script>
 </body>
 </html>
-
 
