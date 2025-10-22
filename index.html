@@ -972,8 +972,148 @@ function logoutAdmin() {
     document.getElementById('adminLoginForm').reset();
 }
 
-function showCloseEventModal() { alert('Event beenden - Feature coming soon!'); }
-function showNewEventModal() { alert('Neues Event - Feature coming soon!'); }
+function showCloseEventModal() {
+    if (document.getElementById('closeEventBtn').disabled) return;
+    const modal = document.createElement('div');
+    modal.id = 'closeEventModalTemp';
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 44px; margin-bottom: 10px;">⚠️</div>
+                <h2 style="color: #333; font-size: 22px;">Event wirklich beenden?</h2>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <div class="info-box warning">
+                    <p style="margin-bottom: 8px;"><strong>Dies wird:</strong></p>
+                    <ul style="margin-left: 20px; line-height: 1.6;">
+                        <li>Alle aktuellen Bestellungen in die Historie verschieben</li>
+                        <li>Das Bestellungen-Sheet leeren</li>
+                        <li>Das aktuelle Event beenden</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModalTemp()">Abbrechen</button>
+                <button class="btn btn-danger" onclick="confirmCloseEvent()">Event beenden</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function showNewEventModal() {
+    if (document.getElementById('newEventBtn').disabled) return;
+    const modal = document.createElement('div');
+    modal.id = 'newEventModalTemp';
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 44px; margin-bottom: 10px;">📅</div>
+                <h2 style="color: #333; font-size: 22px;">Neues Event starten</h2>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <div class="info-box">
+                    ℹ️ Lege das Event-Datum und die Bestell-Deadline fest.
+                </div>
+                <div class="form-group">
+                    <label for="eventDate">Wann findet das Event statt?</label>
+                    <input type="datetime-local" id="eventDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="eventDeadline">Bestellende (Deadline)</label>
+                    <input type="datetime-local" id="eventDeadline" required>
+                    <p class="password-hint">Standard: Event-Tag um 09:00 Uhr</p>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModalTemp()">Abbrechen</button>
+                <button class="btn btn-success" onclick="confirmNewEvent()">Event starten</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    const eventDay = new Date();
+    eventDay.setDate(eventDay.getDate() + 2);
+    eventDay.setHours(12, 0, 0, 0);
+    document.getElementById('eventDate').value = eventDay.toISOString().slice(0, 16);
+    
+    const deadline = new Date(eventDay);
+    deadline.setHours(9, 0, 0, 0);
+    document.getElementById('eventDeadline').value = deadline.toISOString().slice(0, 16);
+    
+    document.getElementById('eventDate').addEventListener('change', function() {
+        const newEventDate = new Date(this.value);
+        newEventDate.setHours(9, 0, 0, 0);
+        document.getElementById('eventDeadline').value = newEventDate.toISOString().slice(0, 16);
+    });
+}
+
+function closeModalTemp() {
+    const closeModal = document.getElementById('closeEventModalTemp');
+    const newModal = document.getElementById('newEventModalTemp');
+    if (closeModal) closeModal.remove();
+    if (newModal) newModal.remove();
+}
+
+async function confirmCloseEvent() {
+    closeModalTemp();
+    setLoading(true);
+    try {
+        const response = await fetch(`${API_URL}?action=archivieren&adminPassword=${encodeURIComponent(adminPassword)}`);
+        const data = await response.json();
+        if (data.success) {
+            showMessage(`✅ Event beendet! ${data.archived} Bestellungen archiviert.`, 'success', 'Verwaltung');
+            await loadEventStatus();
+        } else {
+            showMessage(data.error || 'Fehler!', 'error', 'Verwaltung');
+        }
+    } catch (error) {
+        showMessage('Fehler: ' + error.message, 'error', 'Verwaltung');
+    } finally {
+        setLoading(false);
+    }
+}
+
+async function confirmNewEvent() {
+    const eventDate = document.getElementById('eventDate').value;
+    const deadline = document.getElementById('eventDeadline').value;
+    
+    if (!eventDate || !deadline) {
+        showMessage('Bitte beide Daten angeben!', 'error', 'Verwaltung');
+        return;
+    }
+    
+    if (new Date(deadline) > new Date(eventDate)) {
+        showMessage('Bestellende muss vor Event liegen!', 'error', 'Verwaltung');
+        return;
+    }
+    
+    closeModalTemp();
+    setLoading(true);
+    
+    try {
+        const deadlineISO = new Date(deadline).toISOString();
+        const response = await fetch(`${API_URL}?action=ausserplanmaessig&adminPassword=${encodeURIComponent(adminPassword)}&deadline=${encodeURIComponent(deadlineISO)}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('✅ Neues Event gestartet!', 'success', 'Verwaltung');
+            await loadEventStatus();
+        } else {
+            showMessage(data.error || 'Fehler!', 'error', 'Verwaltung');
+        }
+    } catch (error) {
+        showMessage('Fehler: ' + error.message, 'error', 'Verwaltung');
+    } finally {
+        setLoading(false);
+    }
+}
+
 
 
 
@@ -981,3 +1121,4 @@ function showNewEventModal() { alert('Neues Event - Feature coming soon!'); }
 </script>
 </body>
 </html>
+
