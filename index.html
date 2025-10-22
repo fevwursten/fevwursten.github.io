@@ -63,6 +63,18 @@
         .modal-buttons .btn { flex: 1; }
         .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+		.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 600px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -85,43 +97,54 @@
         ⚠️ <strong>Derzeit kein aktives Event</strong><br>
         Es können momentan keine Bestellungen aufgegeben werden.
     </div>
-    <form id="orderForm">
+	<form id="orderForm">
+    <div class="form-row">
         <div class="form-group">
             <label for="orderName">Benutzername</label>
-            <input type="text" id="orderName" placeholder="Dein Name" required>
+            <input type="text" id="orderName" placeholder="Dein Name" required autocomplete="username">
         </div>
         <div class="form-group">
             <label for="orderPassword">Passwort (optional)</label>
-            <input type="password" id="orderPassword" placeholder="Nur eingeben falls gesetzt">
-            <p class="password-hint">Leer lassen, wenn du kein Passwort hast</p>
+            <input type="password" id="orderPassword" placeholder="Nur eingeben falls gesetzt" autocomplete="current-password">
         </div>
-        <div id="emptyPasswordWarningBestellung" style="display: none;">
-            <div class="checkbox-container">
-                <input type="checkbox" id="confirmEmptyPasswordBestellung">
-                <label for="confirmEmptyPasswordBestellung">
-                    <strong>⚠️ Ich verstehe:</strong> Ohne Passwort kann jeder unter meinem Namen bestellen.
-                </label>
-            </div>
+    </div>
+    
+    <p class="password-hint" style="margin-top: -12px; margin-bottom: 20px;">Leer lassen, wenn du kein Passwort hast</p>
+    
+    <div id="emptyPasswordWarningBestellung" style="display: none;">
+        <div class="checkbox-container">
+            <input type="checkbox" id="confirmEmptyPasswordBestellung">
+            <label for="confirmEmptyPasswordBestellung">
+                <strong>⚠️ Ich verstehe:</strong> Ohne Passwort kann jeder unter meinem Namen bestellen.
+            </label>
         </div>
-        <div class="divider"></div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="form-row">
         <div class="form-group">
             <label for="wuerste">
                 <img src="https://fevwursten.github.io/weisswurst.png" alt="Weißwurst" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 6px;">
                 Anzahl Weißwürste
             </label>
-            <input type="number" id="wuerste" min="0" value="0" required>
+            <input type="number" id="wuerste" min="0" value="0" required autocomplete="off">
         </div>
         <div class="form-group">
             <label for="brezn">🥨 Anzahl Brezn</label>
-            <input type="number" id="brezn" min="0" value="0" required>
+            <input type="number" id="brezn" min="0" value="0" required autocomplete="off">
         </div>
-        <div class="info-box" id="preisInfo" style="display: none;">
-            <strong>Aktuelle Preise:</strong><br>
-            Weißwurst: <span id="displayPreisWurst">0,00</span> € | Breze: <span id="displayPreisBreze">0,00</span> €<br>
-            <strong>Deine Summe: <span id="totalSum">0,00</span> €</strong>
-        </div>
-        <button type="submit" class="btn btn-primary btn-full" id="orderSubmitBtn">Bestellung absenden</button>
-    </form>
+    </div>
+    
+    <div class="info-box" id="preisInfo" style="display: none;">
+        <strong>Aktuelle Preise:</strong><br>
+        Weißwurst: <span id="displayPreisWurst">0,00</span> € | Breze: <span id="displayPreisBreze">0,00</span> €<br>
+        <strong>Deine Summe: <span id="totalSum">0,00</span> €</strong>
+    </div>
+    
+    <button type="submit" class="btn btn-primary btn-full" id="orderSubmitBtn">Bestellung absenden</button>
+</form>
+
 </div>
 <div id="tab-uebersicht" class="tab-content">
     <div class="header">
