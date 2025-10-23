@@ -4,78 +4,113 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weißwurst Bestellung</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 900px; width: 100%; margin: 0 auto; overflow: hidden; }
-        .tab-navigation { display: flex; background: #f5f8fa; border-bottom: 2px solid #e1e8ed; }
-        .tab-button { flex: 1; padding: 16px 20px; background: transparent; border: none; font-size: 15px; font-weight: 600; color: #666; cursor: pointer; transition: all 0.3s; position: relative; }
-        .tab-button:hover { background: #e8ecef; color: #333; }
-        .tab-button.active { color: #667eea; background: white; }
-        .tab-button.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background: #667eea; }
-        .tab-content { display: none; padding: 40px; }
-        .tab-content.active { display: block; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { font-size: 28px; color: #333; margin-bottom: 8px; }
-        .header .subtitle { color: #666; font-size: 14px; }
-        .icon { font-size: 48px; margin-bottom: 16px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #444; font-weight: 500; font-size: 14px; }
-        input[type="text"], input[type="password"], input[type="number"], input[type="datetime-local"] { width: 100%; padding: 12px 16px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 16px; transition: border-color 0.3s; }
-        input:focus { outline: none; border-color: #667eea; }
-        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-        .btn:disabled { background: #ccc !important; cursor: not-allowed !important; opacity: 0.6 !important; }
-        .btn-full { width: 100%; padding: 14px; font-size: 16px; margin-top: 10px; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
-        .btn-secondary { background: #f5f8fa; color: #667; }
-        .btn-small { padding: 8px 16px; font-size: 13px; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .message { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: none; }
-        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .message.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
-        .divider { height: 1px; background: #e1e8ed; margin: 30px 0; }
-        .info-box { background: #f5f8fa; padding: 16px; border-radius: 8px; font-size: 14px; color: #666; margin-bottom: 20px; line-height: 1.6; }
-        .info-box.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
-        .info-box.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .password-hint { font-size: 12px; color: #999; margin-top: 4px; }
-        .checkbox-container { display: flex; align-items: flex-start; margin-bottom: 20px; padding: 12px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; }
-        .checkbox-container input[type="checkbox"] { margin-right: 10px; margin-top: 3px; width: 18px; height: 18px; cursor: pointer; }
-        .checkbox-container label { margin: 0; font-size: 13px; color: #856404; cursor: pointer; font-weight: 400; }
-        .orders-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .orders-table th { background: #f5f8fa; padding: 12px; text-align: left; font-weight: 600; color: #444; border-bottom: 2px solid #e1e8ed; }
-        .orders-table td { padding: 12px; border-bottom: 1px solid #e1e8ed; }
-        .orders-table .item-cell { text-align: center; }
-        .orders-table .name-cell { font-weight: 500; color: #333; }
-        .summary-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; border-radius: 12px; color: white; margin-top: 32px; }
-        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .summary-item { background: rgba(255, 255, 255, 0.15); padding: 16px; border-radius: 8px; text-align: center; }
-        .summary-item-value { font-size: 28px; font-weight: 600; }
-        .comparison-table { width: 100%; border-collapse: collapse; }
-        .comparison-table td { padding: 10px; }
-        .comparison-table .old-value { color: #dc3545; text-decoration: line-through; }
-        .comparison-table .new-value { color: #28a745; font-weight: 600; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); }
-        .modal-content { background-color: white; margin: 10% auto; padding: 30px; border-radius: 12px; max-width: 500px; }
-        .modal-buttons { display: flex; gap: 12px; }
-        .modal-buttons .btn { flex: 1; }
-        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-		.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-@media (max-width: 600px) {
-    .form-row {
-        grid-template-columns: 1fr;
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+        /* ⬇️⬇️⬇️ GEÄNDERT - CI Gradient Rot/Dunkelrot ⬇️⬇️⬇️ */
+        background: linear-gradient(135deg, #b9052d 0%, #6e031b 100%); 
+        /* ⬆️⬆️⬆️ ⬆️⬆️⬆️ */
+        min-height: 100vh; 
+        padding: 20px; 
     }
-}
+    .container { background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(185,5,45,0.3); max-width: 900px; width: 100%; margin: 0 auto; overflow: hidden; }
+    
+    .tab-navigation { display: flex; background: #f5f8fa; border-bottom: 2px solid #e1e8ed; }
+    .tab-button { flex: 1; padding: 16px 20px; background: transparent; border: none; font-size: 15px; font-weight: 600; color: #666; cursor: pointer; transition: all 0.3s; position: relative; }
+    .tab-button:hover { background: #e8ecef; color: #333; }
+    
+    /* ⬇️⬇️⬇️ GEÄNDERT - CI Rot für aktiven Tab ⬇️⬇️⬇️ */
+    .tab-button.active { color: #b9052d; background: white; }
+    .tab-button.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background: #b9052d; }
+    /* ⬆️⬆️⬆️ ⬆️⬆️⬆️ */
+    
+    .tab-content { display: none; padding: 40px; }
+    .tab-content.active { display: block; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { font-size: 28px; color: #333; margin-bottom: 8px; }
+    .header .subtitle { color: #666; font-size: 14px; }
+    .icon { font-size: 48px; margin-bottom: 16px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: #444; font-weight: 500; font-size: 14px; }
+    input[type="text"], input[type="password"], input[type="number"], input[type="datetime-local"] { width: 100%; padding: 12px 16px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 16px; transition: border-color 0.3s; }
+    
+    /* ⬇️⬇️⬇️ GEÄNDERT - CI Rot für Focus ⬇️⬇️⬇️ */
+    input:focus { outline: none; border-color: #b9052d; }
+    /* ⬆️⬆️⬆️ ⬆️⬆️⬆️ */
+    
+    .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+    .btn:disabled { background: #ccc !important; cursor: not-allowed !important; opacity: 0.6 !important; }
+    .btn-full { width: 100%; padding: 14px; font-size: 16px; margin-top: 10px; }
+    
+    /* ⬇️⬇️⬇️ GEÄNDERT - CI Gradient Rot/Dunkelrot ⬇️⬇️⬇️ */
+    .btn-primary { background: linear-gradient(135deg, #b9052d 0%, #dd0038 100%); color: white; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(185, 5, 45, 0.4); }
+    /* ⬆️⬆️⬆️ ⬆️⬆️⬆️ */
+    
+    .btn-secondary { background: #f5f8fa; color: #667; }
+    .btn-small { padding: 8px 16px; font-size: 13px; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-success { background: #28a745; color: white; }
+    
+    .message { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: none; }
+    .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .message.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+    
+    .divider { height: 1px; background: #e1e8ed; margin: 30px 0; }
+    .info-box { background: #f5f8fa; padding: 16px; border-radius: 8px; font-size: 14px; color: #666; margin-bottom: 20px; line-height: 1.6; }
+    .info-box.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+    .info-box.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    
+    .password-hint { font-size: 12px; color: #999; margin-top: 4px; }
+    .checkbox-container { display: flex; align-items: flex-start; margin-bottom: 20px; padding: 12px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; }
+    .checkbox-container input[type="checkbox"] { margin-right: 10px; margin-top: 3px; width: 18px; height: 18px; cursor: pointer; }
+    .checkbox-container label { margin: 0; font-size: 13px; color: #856404; cursor: pointer; font-weight: 400; }
+    
+    .orders-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .orders-table th { background: #f5f8fa; padding: 12px; text-align: left; font-weight: 600; color: #444; border-bottom: 2px solid #e1e8ed; }
+    .orders-table td { padding: 12px; border-bottom: 1px solid #e1e8ed; }
+    .orders-table .item-cell { text-align: center; }
+    .orders-table .name-cell { font-weight: 500; color: #333; }
+    
+    /* ⬇️⬇️⬇️ GEÄNDERT - CI Gradient für Summary ⬇️⬇️⬇️ */
+    .summary-section { 
+        background: linear-gradient(135deg, #b9052d 0%, #6e031b 100%); 
+        padding: 24px; 
+        border-radius: 12px; 
+        color: white; 
+        margin-top: 32px; 
+    }
+    /* ⬆️⬆️⬆️ ⬆️⬆️⬆️ */
+    
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .summary-item { background: rgba(255, 255, 255, 0.15); padding: 16px; border-radius: 8px; text-align: center; }
+    .summary-item-value { font-size: 28px; font-weight: 600; }
+    
+    .comparison-table { width: 100%; border-collapse: collapse; }
+    .comparison-table td { padding: 10px; }
+    .comparison-table .old-value { color: #dc3545; text-decoration: line-through; }
+    .comparison-table .new-value { color: #28a745; font-weight: 600; }
+    
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); }
+    .modal-content { background-color: white; margin: 10% auto; padding: 30px; border-radius: 12px; max-width: 500px; }
+    .modal-buttons { display: flex; gap: 12px; }
+    .modal-buttons .btn { flex: 1; }
+    
+    /* ⬇️⬇️⬇️ GEÄNDERT - CI Rot für Spinner ⬇️⬇️⬇️ */
+    .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #b9052d; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+    /* ⬆️⬆️⬆️ ⬆️⬆️⬆️ */
+    
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    
+    @media (max-width: 600px) {
+        .form-row { grid-template-columns: 1fr; }
+    }
+</style>
 
-    </style>
 </head>
 <body>
 <div class="container">
