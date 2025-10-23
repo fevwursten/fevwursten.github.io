@@ -145,6 +145,63 @@
     <button type="submit" class="btn btn-primary btn-full" id="orderSubmitBtn">Bestellung absenden</button>
 </form>
 
+<!-- ⬇️⬇️⬇️ HIER EINFÜGEN - Übersicht nach Bestellung ⬇️⬇️⬇️ -->
+
+<div class="divider"></div>
+
+<div style="font-size: 20px; color: #333; margin-bottom: 20px; font-weight: 600; text-align: center;">
+    📊 Aktuelle Bestellungen
+</div>
+
+<div id="messageBestellungUebersicht" class="message"></div>
+
+<div id="loadingBestellungUebersicht" style="display: none; text-align: center;">
+    <div class="spinner"></div>
+    <p style="color: #667eea; margin-top: 16px;">Lade Bestellungen...</p>
+</div>
+
+<div id="contentBestellungUebersicht" style="display: none;">
+    <table class="orders-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th class="item-cell">
+                    <img src="https://fevwursten.github.io/weisswurst.png" alt="Weißwurst" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
+                    Würste
+                </th>
+                <th class="item-cell">🥨 Brezn</th>
+                <th style="text-align: right;">Summe</th>
+            </tr>
+        </thead>
+        <tbody id="ordersTableBodyBestellung"></tbody>
+    </table>
+    <div class="summary-section">
+        <div style="font-size: 20px; font-weight: 600; margin-bottom: 20px; text-align: center;">📊 Gesamtübersicht</div>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">
+                    <img src="https://fevwursten.github.io/weisswurst.png" alt="Weißwurst" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 4px;">
+                    Weißwürste gesamt
+                </div>
+                <div class="summary-item-value" id="totalWuersteBestellung">0</div>
+                <div style="font-size: 18px; font-weight: 500; opacity: 0.95;" id="totalWuerstePriceBestellung">0,00 €</div>
+            </div>
+            <div class="summary-item">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">🥨 Brezn gesamt</div>
+                <div class="summary-item-value" id="totalBreznBestellung">0</div>
+                <div style="font-size: 18px; font-weight: 500; opacity: 0.95;" id="totalBreznPriceBestellung">0,00 €</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="emptyStateBestellungUebersicht" style="display: none; text-align: center; padding: 40px; color: #999;">
+    <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.5;">📋</div>
+    <h3>Keine Bestellungen vorhanden</h3>
+    <p>Es wurden noch keine Bestellungen aufgegeben.</p>
+</div>
+
+
 </div>
 <div id="tab-uebersicht" class="tab-content">
     <div class="header">
@@ -603,6 +660,7 @@ async function confirmUpdate() {
             document.getElementById('brezn').value = 0;
             updateTotalSum();
             await loadPricesAndEventStatus();
+			await loadOrdersInBestellung(); // <-- HINZUFÜGEN
         } else {
             showMessage(orderData.message || 'Fehler beim Speichern!', 'error', 'Bestellung');
         }
@@ -661,6 +719,7 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             document.getElementById('brezn').value = 0;
             updateTotalSum();
             await loadPricesAndEventStatus();
+			await loadOrdersInBestellung(); // <-- HINZUFÜGEN
         } else {
             showMessage(orderData.message || 'Fehler beim Speichern!', 'error', 'Bestellung');
         }
@@ -722,6 +781,75 @@ async function loadOrders() {
         document.getElementById('emptyStateUebersicht').style.display = 'block';
     }
 }
+
+async function loadOrdersInBestellung() {
+    document.getElementById('loadingBestellungUebersicht').style.display = 'block';
+    document.getElementById('contentBestellungUebersicht').style.display = 'none';
+    document.getElementById('emptyStateBestellungUebersicht').style.display = 'none';
+    
+    try {
+        const response = await fetch(`${API_URL}?action=getAllOrders`);
+        const data = await response.json();
+        
+        document.getElementById('loadingBestellungUebersicht').style.display = 'none';
+        
+        if (!data.success) {
+            document.getElementById('emptyStateBestellungUebersicht').style.display = 'block';
+            return;
+        }
+        
+        const orders = data.orders || [];
+        
+        if (orders.length === 0) {
+            document.getElementById('emptyStateBestellungUebersicht').style.display = 'block';
+            return;
+        }
+        
+        const tbody = document.getElementById('ordersTableBodyBestellung');
+        tbody.innerHTML = '';
+        
+        let totalWuerste = 0, totalBrezn = 0, totalWuerstePrice = 0, totalBreznPrice = 0;
+        
+        orders.forEach(order => {
+            const wuerste = parseInt(order.wuerste) || 0;
+            const brezn = parseInt(order.brezn) || 0;
+            const preisWurst = parseFloat(order.preisWurst) || 0;
+            const preisBreze = parseFloat(order.preisBreze) || 0;
+            const summe = (wuerste * preisWurst) + (brezn * preisBreze);
+            
+            totalWuerste += wuerste;
+            totalBrezn += brezn;
+            totalWuerstePrice += wuerste * preisWurst;
+            totalBreznPrice += brezn * preisBreze;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="name-cell">${order.name}</td>
+                <td class="item-cell">${wuerste}</td>
+                <td class="item-cell">${brezn}</td>
+                <td style="text-align: right; font-weight: 600; color: #667eea;">${summe.toFixed(2).replace('.', ',')} €</td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        document.getElementById('totalWuersteBestellung').textContent = totalWuerste;
+        document.getElementById('totalBreznBestellung').textContent = totalBrezn;
+        document.getElementById('totalWuerstePriceBestellung').textContent = totalWuerstePrice.toFixed(2).replace('.', ',') + ' €';
+        document.getElementById('totalBreznPriceBestellung').textContent = totalBreznPrice.toFixed(2).replace('.', ',') + ' €';
+        
+        document.getElementById('contentBestellungUebersicht').style.display = 'block';
+    } catch (error) {
+        document.getElementById('loadingBestellungUebersicht').style.display = 'none';
+        document.getElementById('emptyStateBestellungUebersicht').style.display = 'block';
+    }
+}
+
+// Beim Laden der Seite auch anzeigen
+window.addEventListener('DOMContentLoaded', () => {
+    loadOrdersInBestellung();
+});
+
+
 let currentVerwaltungMode = 'user';
 let currentUsername = '';
 let currentPasswordHash = '';
@@ -1250,4 +1378,3 @@ async function confirmNewEvent() {
 </script>
 </body>
 </html>
-
