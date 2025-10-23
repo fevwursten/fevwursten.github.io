@@ -97,7 +97,7 @@
         ⚠️ <strong>Derzeit kein aktives Event</strong><br>
         Es können momentan keine Bestellungen aufgegeben werden.
     </div>
-	<form id="orderForm">
+<form id="orderForm">
     <div class="form-row">
         <div class="form-group">
             <label for="orderName">Benutzername</label>
@@ -106,10 +106,10 @@
         <div class="form-group">
             <label for="orderPassword">Passwort (optional)</label>
             <input type="password" id="orderPassword" placeholder="Nur eingeben falls gesetzt" autocomplete="current-password">
+            <!-- ⬇️⬇️⬇️ HIER BLEIBT DER HINT - INNERHALB der form-group ⬇️⬇️⬇️ -->
+            <p class="password-hint">Leer lassen, wenn du kein Passwort hast</p>
         </div>
     </div>
-    
-    <p class="password-hint" style="margin-top: -12px; margin-bottom: 20px;">Leer lassen, wenn du kein Passwort hast</p>
     
     <div id="emptyPasswordWarningBestellung" style="display: none;">
         <div class="checkbox-container">
