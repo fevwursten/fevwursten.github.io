@@ -109,6 +109,107 @@
     @media (max-width: 600px) {
         .form-row { grid-template-columns: 1fr; }
     }
+/* ⬇️⬇️⬇️ HIER EINFÜGEN - Accordion Styles ⬇️⬇️⬇️ */
+
+.event-accordion {
+    margin-bottom: 16px;
+    border: 2px solid #e1e8ed;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+}
+
+.event-accordion.current {
+    border-color: #b9052d;
+    box-shadow: 0 4px 12px rgba(185, 5, 45, 0.15);
+}
+
+.event-header {
+    padding: 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f5f8fa;
+    transition: all 0.3s;
+    user-select: none;
+}
+
+.event-accordion.current .event-header {
+    background: linear-gradient(135deg, #b9052d 0%, #6e031b 100%);
+    color: white;
+}
+
+.event-header:hover {
+    background: #e8ecef;
+}
+
+.event-accordion.current .event-header:hover {
+    background: linear-gradient(135deg, #dd0038 0%, #b9052d 100%);
+}
+
+.event-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.event-badge {
+    background: #b9052d;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.event-stats {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+.event-accordion.current .event-stats {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.event-toggle {
+    font-size: 24px;
+    transition: transform 0.3s;
+    color: #b9052d;
+}
+
+.event-accordion.current .event-toggle {
+    color: white;
+}
+
+.event-toggle.open {
+    transform: rotate(180deg);
+}
+
+.event-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.event-content.open {
+    max-height: 2000px;
+    transition: max-height 0.5s ease-in;
+}
+
+.event-content-inner {
+    padding: 20px;
+}
+
+/* ⬆️⬆️⬆️ BIS HIER ⬆️⬆️⬆️ */
+</style>
+	
+	
+
 </style>
 
 </head>
@@ -238,57 +339,33 @@
 
 
 </div>
+<!-- ÜBERSICHT TAB -->
 <div id="tab-uebersicht" class="tab-content">
     <div class="header">
         <div class="icon">📊</div>
-        <h1>Bestellübersicht</h1>
-        <p class="subtitle">Alle Bestellungen des aktuellen Events</p>
+        <h1>Event-Übersicht</h1>
+        <p class="subtitle">Aktuelles Event und Bestellhistorie</p>
     </div>
+    
     <div id="messageUebersicht" class="message"></div>
+    
     <div id="loadingUebersicht" style="display: none; text-align: center;">
         <div class="spinner"></div>
-        <p style="color: #667eea; margin-top: 16px;">Lade Bestellungen...</p>
+        <p style="color: #b9052d; margin-top: 16px;">Lade Events...</p>
     </div>
+    
     <div id="contentUebersicht" style="display: none;">
-        <table class="orders-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th class="item-cell">
-                        <img src="https://fevwursten.github.io/weisswurst.png" alt="Weißwurst" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
-                        Würste
-                    </th>
-                    <th class="item-cell">🥨 Brezn</th>
-                    <th style="text-align: right;">Summe</th>
-                </tr>
-            </thead>
-            <tbody id="ordersTableBody"></tbody>
-        </table>
-        <div class="summary-section">
-            <div style="font-size: 20px; font-weight: 600; margin-bottom: 20px; text-align: center;">📊 Gesamtübersicht</div>
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">
-                        <img src="https://fevwursten.github.io/weisswurst.png" alt="Weißwurst" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 4px;">
-                        Weißwürste gesamt
-                    </div>
-                    <div class="summary-item-value" id="totalWuerste">0</div>
-                    <div style="font-size: 18px; font-weight: 500; opacity: 0.95;" id="totalWuerstePrice">0,00 €</div>
-                </div>
-                <div class="summary-item">
-                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">🥨 Brezn gesamt</div>
-                    <div class="summary-item-value" id="totalBrezn">0</div>
-                    <div style="font-size: 18px; font-weight: 500; opacity: 0.95;" id="totalBreznPrice">0,00 €</div>
-                </div>
-            </div>
-        </div>
+        <!-- Events werden hier dynamisch eingefügt -->
+        <div id="eventsContainer"></div>
     </div>
+    
     <div id="emptyStateUebersicht" style="display: none; text-align: center; padding: 40px; color: #999;">
         <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.5;">📋</div>
-        <h3>Keine Bestellungen vorhanden</h3>
-        <p>Es wurden noch keine Bestellungen aufgegeben.</p>
+        <h3>Keine Events vorhanden</h3>
+        <p>Es wurden noch keine Events durchgeführt.</p>
     </div>
 </div>
+
 <div id="tab-verwaltung" class="tab-content">
     <div class="header">
         <div class="icon">⚙️</div>
@@ -512,7 +589,7 @@ function switchTab(tabName) {
     document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`tab-${tabName}`).classList.add('active');
     event.target.classList.add('active');
-    if (tabName === 'uebersicht') loadOrders();
+    if (tabName === 'uebersicht') loadUebersicht(); // <-- GEÄNDERT
 }
 
 async function loadPricesOnPageLoad() {
@@ -1406,6 +1483,213 @@ async function confirmNewEvent() {
     }
 }
 
+// ⬇️⬇️⬇️ HIER EINFÜGEN - Neue Übersicht-Funktionen ⬇️⬇️⬇️
+
+async function loadUebersicht() {
+    document.getElementById('loadingUebersicht').style.display = 'block';
+    document.getElementById('contentUebersicht').style.display = 'none';
+    document.getElementById('emptyStateUebersicht').style.display = 'none';
+    
+    try {
+        // Lade aktuelle Bestellungen und Historie parallel
+        const [currentResponse, historieResponse] = await Promise.all([
+            fetch(`${API_URL}?action=getAllOrders`),
+            fetch(`${API_URL}?type=historie`)
+        ]);
+        
+        const currentData = await currentResponse.json();
+        const historieData = await historieResponse.json();
+        
+        document.getElementById('loadingUebersicht').style.display = 'none';
+        
+        // Gruppiere Historie nach Event-Datum
+        const historieGroups = {};
+        if (Array.isArray(historieData) && historieData.length > 0) {
+            historieData.forEach(entry => {
+                const datum = entry['Event-Datum'] || entry.Datum || 'Unbekannt';
+                if (!historieGroups[datum]) {
+                    historieGroups[datum] = [];
+                }
+                historieGroups[datum].push(entry);
+            });
+        }
+        
+        // Sortiere Events (neueste zuerst)
+        const sortedEvents = Object.keys(historieGroups).sort().reverse();
+        
+        // Prüfe ob aktuelles Event läuft
+        const hasCurrentEvent = currentData.success && Array.isArray(currentData.orders) && currentData.orders.length > 0;
+        
+        if (!hasCurrentEvent && sortedEvents.length === 0) {
+            document.getElementById('emptyStateUebersicht').style.display = 'block';
+            return;
+        }
+        
+        const container = document.getElementById('eventsContainer');
+        container.innerHTML = '';
+        
+        // 1. Aktuelles Event (falls vorhanden)
+        if (hasCurrentEvent) {
+            container.appendChild(createEventAccordion('current', currentData.orders, true, true));
+        }
+        
+        // 2. Vorhergehendes Event (aufgeklappt)
+        if (sortedEvents.length > 0) {
+            const lastEvent = sortedEvents[0];
+            container.appendChild(createEventAccordion(lastEvent, historieGroups[lastEvent], true, false));
+        }
+        
+        // 3. Ältere Events (zugeklappt)
+        for (let i = 1; i < sortedEvents.length; i++) {
+            const eventDatum = sortedEvents[i];
+            container.appendChild(createEventAccordion(eventDatum, historieGroups[eventDatum], false, false));
+        }
+        
+        document.getElementById('contentUebersicht').style.display = 'block';
+    } catch (error) {
+        document.getElementById('loadingUebersicht').style.display = 'none';
+        document.getElementById('emptyStateUebersicht').style.display = 'block';
+        console.error('Fehler beim Laden:', error);
+    }
+}
+
+function createEventAccordion(eventDatum, orders, isOpen, isCurrent) {
+    const accordion = document.createElement('div');
+    accordion.className = 'event-accordion' + (isCurrent ? ' current' : '');
+    
+    // Berechne Statistiken
+    let totalWuerste = 0, totalBrezn = 0, totalSum = 0;
+    
+    orders.forEach(order => {
+        const wuerste = parseInt(order['Weißwürste'] || order.Wuerste || order.wuerste || 0);
+        const brezn = parseInt(order.Brezn || order.brezn || 0);
+        const preisWurst = parseFloat(order['Preis Wurst'] || order.PreisWurst || order.preisWurst || 0);
+        const preisBreze = parseFloat(order['Preis Breze'] || order.PreisBreze || order.preisBreze || 0);
+        
+        totalWuerste += wuerste;
+        totalBrezn += brezn;
+        totalSum += (wuerste * preisWurst) + (brezn * preisBreze);
+    });
+    
+    const displayDatum = isCurrent ? 'Aktuelles Event' : eventDatum;
+    const badge = isCurrent ? '<span class="event-badge">🔴 Live</span>' : '';
+    
+    accordion.innerHTML = `
+        <div class="event-header" onclick="toggleEvent(this)">
+            <div class="event-title">
+                <strong style="font-size: 16px;">${displayDatum}</strong>
+                ${badge}
+            </div>
+            <div class="event-stats">
+                <span>👥 ${orders.length}</span>
+                <span>🥨 ${totalWuerste + totalBrezn}</span>
+                <span>${totalSum.toFixed(2).replace('.', ',')} €</span>
+            </div>
+            <div class="event-toggle ${isOpen ? 'open' : ''}">▼</div>
+        </div>
+        <div class="event-content ${isOpen ? 'open' : ''}">
+            <div class="event-content-inner">
+                ${createEventTable(orders, isCurrent)}
+                ${createEventSummary(totalWuerste, totalBrezn, totalSum)}
+            </div>
+        </div>
+    `;
+    
+    return accordion;
+}
+
+function createEventTable(orders, isCurrent) {
+    let html = `
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th class="item-cell">
+                        <img src="https://fevwursten.github.io/weisswurst.png" alt="Weißwurst" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
+                        Würste
+                    </th>
+                    <th class="item-cell">🥨 Brezn</th>
+                    <th style="text-align: right;">Preis/Wurst</th>
+                    <th style="text-align: right;">Preis/Breze</th>
+                    <th style="text-align: right;">Summe</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    orders.forEach(order => {
+        const name = order.Name || order.name || order.Benutzer || '-';
+        const wuerste = parseInt(order['Weißwürste'] || order.Wuerste || order.wuerste || 0);
+        const brezn = parseInt(order.Brezn || order.brezn || 0);
+        const preisWurst = parseFloat(order['Preis Wurst'] || order.PreisWurst || order.preisWurst || 0);
+        const preisBreze = parseFloat(order['Preis Breze'] || order.PreisBreze || order.preisBreze || 0);
+        const summe = (wuerste * preisWurst) + (brezn * preisBreze);
+        
+        html += `
+            <tr>
+                <td class="name-cell">${name}</td>
+                <td class="item-cell">${wuerste}</td>
+                <td class="item-cell">${brezn}</td>
+                <td style="text-align: right;">${preisWurst.toFixed(2).replace('.', ',')} €</td>
+                <td style="text-align: right;">${preisBreze.toFixed(2).replace('.', ',')} €</td>
+                <td style="text-align: right; font-weight: 600; color: #b9052d;">${summe.toFixed(2).replace('.', ',')} €</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+    `;
+    
+    return html;
+}
+
+function createEventSummary(totalWuerste, totalBrezn, totalSum) {
+    return `
+        <div class="summary-section" style="margin-top: 24px;">
+            <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; text-align: center;">
+                📊 Gesamt
+            </div>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">
+                        <img src="https://fevwursten.github.io/weisswurst.png" alt="Weißwurst" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 4px;">
+                        Weißwürste
+                    </div>
+                    <div class="summary-item-value">${totalWuerste}</div>
+                </div>
+                <div class="summary-item">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">🥨 Brezn</div>
+                    <div class="summary-item-value">${totalBrezn}</div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 16px; font-size: 24px; font-weight: 600;">
+                ${totalSum.toFixed(2).replace('.', ',')} €
+            </div>
+        </div>
+    `;
+}
+
+function toggleEvent(header) {
+    const accordion = header.parentElement;
+    const content = accordion.querySelector('.event-content');
+    const toggle = accordion.querySelector('.event-toggle');
+    
+    const isOpen = content.classList.contains('open');
+    
+    if (isOpen) {
+        content.classList.remove('open');
+        toggle.classList.remove('open');
+    } else {
+        content.classList.add('open');
+        toggle.classList.add('open');
+    }
+}
+
+// ⬆️⬆️⬆️ BIS HIER ⬆️⬆️⬆️
+
+</script>
 
 
 
