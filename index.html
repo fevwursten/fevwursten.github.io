@@ -1580,11 +1580,13 @@ function createEventAccordion(eventDatum, orders, isOpen, isCurrent) {
                 <strong style="font-size: 16px;">${displayDatum}</strong>
                 ${badge}
             </div>
-            <div class="event-stats">
-                <span>👥 ${orders.length}</span>
-                <span>🥨 ${totalWuerste + totalBrezn}</span>
-                <span>${totalSum.toFixed(2).replace('.', ',')} €</span>
-            </div>
+			<div class="event-stats">
+				<span>👥 ${orders.length}</span>
+				<span><img src="https://fevwursten.github.io/weisswurst.png" alt="" style="width: 14px; height: 14px; vertical-align: middle;"> ${totalWuerste}</span>
+				<span>🥨 ${totalBrezn}</span>
+				<span>${totalSum.toFixed(2).replace('.', ',')} €</span>
+			</div>
+
             <div class="event-toggle ${isOpen ? 'open' : ''}">▼</div>
         </div>
         <div class="event-content ${isOpen ? 'open' : ''}">
