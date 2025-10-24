@@ -1546,8 +1546,20 @@ async function loadUebersicht() {
         }
         
         // Sortiere Events (neueste zuerst)
-        const sortedEvents = Object.keys(historieGroups).sort().reverse();
-        
+		const sortedEvents = Object.keys(historieGroups).sort((a, b) => {
+			// Parse deutsche Daten: "Freitag, 24.10.2025" oder "24.10.2025"
+			const parseDate = (str) => {
+				const match = str.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+				if (match) {
+					const [_, day, month, year] = match;
+					return new Date(year, month - 1, day).getTime();
+				}
+				return 0;
+			};
+			
+			return parseDate(b) - parseDate(a); // Neueste zuerst
+		});
+       
         // Prüfe ob aktuelles Event läuft
         const hasCurrentEvent = currentData.success && Array.isArray(currentData.orders) && currentData.orders.length > 0;
         
