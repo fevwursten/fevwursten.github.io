@@ -1670,29 +1670,28 @@ function createEventTable(orders, isCurrent) {
 
 function createEventSummary(totalWuerste, totalBrezn, totalSum) {
     return `
-        <div class="summary-section" style="margin-top: 24px;">
-            <div style="font-size: 18px; font-weight: 600; margin-bottom: 16px; text-align: center;">
-                📊 Gesamt
-            </div>
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">
-                        <img src="https://fevwursten.github.io/weisswurst.png" alt="Weißwurst" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 4px;">
-                        Weißwürste
+        <div class="summary-section" style="margin-top: 24px; padding: 16px;">
+            <div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
+                        <img src="https://fevwursten.github.io/weisswurst.png" alt="Weißwurst" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
+                        Würste
                     </div>
-                    <div class="summary-item-value">${totalWuerste}</div>
+                    <div style="font-size: 32px; font-weight: 600;">${totalWuerste}</div>
                 </div>
-                <div class="summary-item">
-                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">🥨 Brezn</div>
-                    <div class="summary-item-value">${totalBrezn}</div>
+                <div style="text-align: center;">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">🥨 Brezn</div>
+                    <div style="font-size: 32px; font-weight: 600;">${totalBrezn}</div>
                 </div>
-            </div>
-            <div style="text-align: center; margin-top: 16px; font-size: 24px; font-weight: 600;">
-                ${totalSum.toFixed(2).replace('.', ',')} €
+                <div style="text-align: center;">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">💰 Gesamt</div>
+                    <div style="font-size: 32px; font-weight: 600;">${totalSum.toFixed(2).replace('.', ',')} €</div>
+                </div>
             </div>
         </div>
     `;
 }
+
 
 function toggleEvent(header) {
     const accordion = header.parentElement;
