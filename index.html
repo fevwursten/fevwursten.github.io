@@ -561,6 +561,27 @@
     </div>
 </div>
 <script>
+function translateDateToDeutsch(datum) {
+    if (!datum || typeof datum !== 'string') return datum;
+    
+    const replacements = {
+        'Mon': 'Montag',
+        'Tue': 'Dienstag', 
+        'Wed': 'Mittwoch',
+        'Thu': 'Donnerstag',
+        'Fri': 'Freitag',
+        'Sat': 'Samstag',
+        'Sun': 'Sonntag'
+    };
+    
+    let result = datum;
+    for (const [eng, ger] of Object.entries(replacements)) {
+        result = result.replace(eng, ger);
+    }
+    
+    return result;
+}
+
 const API_URL = 'https://script.google.com/macros/s/AKfycbyc-i8lmUFvpJ5QxZ2EOo8FbegOnH0ez9vyBIGDynZtu12mOUtTMHKlbz4XqXls2EbwwA/exec';
 const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
@@ -1571,7 +1592,7 @@ function createEventAccordion(eventDatum, orders, isOpen, isCurrent) {
         totalSum += (wuerste * preisWurst) + (brezn * preisBreze);
     });
     
-    const displayDatum = isCurrent ? 'Aktuelles Event' : eventDatum;
+    const displayDatum = isCurrent ? 'Aktuelles Event' : translateDateToDeutsch(eventDatum);
     const badge = isCurrent ? '<span class="event-badge">🔴 Live</span>' : '';
     
     accordion.innerHTML = `
