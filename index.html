@@ -564,6 +564,7 @@
 function translateDateToDeutsch(datum) {
     if (!datum || typeof datum !== 'string') return datum;
     
+    // Alte Einträge mit englischen Abkürzungen
     const replacements = {
         'Mon': 'Montag',
         'Tue': 'Dienstag', 
@@ -579,8 +580,17 @@ function translateDateToDeutsch(datum) {
         result = result.replace(eng, ger);
     }
     
+    // Neue Einträge nur mit Datum (ohne Wochentag) → Wochentag hinzufügen
+    if (datum.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
+        const [day, month, year] = datum.split('.');
+        const date = new Date(year, month - 1, day);
+        const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+        return days[date.getDay()] + ', ' + datum;
+    }
+    
     return result;
 }
+
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbyc-i8lmUFvpJ5QxZ2EOo8FbegOnH0ez9vyBIGDynZtu12mOUtTMHKlbz4XqXls2EbwwA/exec';
 const EMPTY_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
