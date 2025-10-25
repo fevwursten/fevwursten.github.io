@@ -1559,14 +1559,21 @@ async function loadUebersicht() {
         // Sortiere Events (neueste zuerst)
 		const sortedEvents = Object.keys(historieGroups).sort((a, b) => {
 			// Parse deutsche Daten: "Freitag, 24.10.2025" oder "24.10.2025"
-			const parseDate = (str) => {
-				const match = str.match(/(\d{2})\.(\d{2})\.(\d{4})/);
-				if (match) {
-					const [_, day, month, year] = match;
-					return new Date(year, month - 1, day).getTime();
-				}
-				return 0;
-			};
+		const parseDate = (str) => {
+		// 1. ISO-Format: "2025-10-24T22:00:00.000Z"
+			if (str.match(/^\d{4}-\d{2}-\d{2}T/)) {
+				return new Date(str).getTime();
+			}
+			
+			// 2. Deutsches Format: "24.10.2025" (mit oder ohne Wochentag)
+			const match = str.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+			if (match) {
+				const [_, day, month, year] = match;
+				return new Date(year, month - 1, day).getTime();
+			}
+			
+			return 0;
+		};
 			
 			return parseDate(b) - parseDate(a); // Neueste zuerst
 		});
