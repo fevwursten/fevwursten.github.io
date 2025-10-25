@@ -561,9 +561,23 @@
     </div>
 </div>
 <script>
+
+// ⬇️⬇️⬇️ KOMPLETT ERSETZEN ⬇️⬇️⬇️
+
 function translateDateToDeutsch(datum) {
     if (!datum || typeof datum !== 'string') return datum;
     
+    // 1. ISO-Timestamp abfangen (z.B. "2025-10-24T22:00:00.000Z")
+    if (datum.match(/^\d{4}-\d{2}-\d{2}T/)) {
+        const date = new Date(datum);
+        const germanDays = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return germanDays[date.getDay()] + ', ' + day + '.' + month + '.' + year;
+    }
+    
+    // 2. Alte Einträge mit englischen Abkürzungen (z.B. "Fri, 24.10.2025")
     const replacements = {
         'Mon': 'Montag',
         'Tue': 'Dienstag', 
@@ -579,8 +593,19 @@ function translateDateToDeutsch(datum) {
         result = result.replace(eng, ger);
     }
     
+    // 3. Neue Einträge nur mit Datum (z.B. "24.10.2025") → Wochentag hinzufügen
+    if (datum.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
+        const [day, month, year] = datum.split('.');
+        const date = new Date(year, month - 1, day);
+        const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+        return days[date.getDay()] + ', ' + datum;
+    }
+    
     return result;
 }
+
+// ⬆️⬆️⬆️ BIS HIER ⬆️⬆️⬆️
+
 
     // Alte Einträge mit englischen Abkürzungen
     const replacements = {
