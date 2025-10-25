@@ -564,6 +564,24 @@
 function translateDateToDeutsch(datum) {
     if (!datum || typeof datum !== 'string') return datum;
     
+    const replacements = {
+        'Mon': 'Montag',
+        'Tue': 'Dienstag', 
+        'Wed': 'Mittwoch',
+        'Thu': 'Donnerstag',
+        'Fri': 'Freitag',
+        'Sat': 'Samstag',
+        'Sun': 'Sonntag'
+    };
+    
+    let result = datum;
+    for (const [eng, ger] of Object.entries(replacements)) {
+        result = result.replace(eng, ger);
+    }
+    
+    return result;
+}
+
     // Alte Einträge mit englischen Abkürzungen
     const replacements = {
         'Mon': 'Montag',
