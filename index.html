@@ -936,67 +936,107 @@ async function loadOrders() {
     }
 }
 
+
 async function loadOrdersInBestellung() {
     document.getElementById('loadingBestellungUebersicht').style.display = 'block';
-    document.getElementById('contentBestellungUebersicht').style.display = 'none';
-    document.getElementById('emptyStateBestellungUebersicht').style.display = 'none';
+    document.getElementById('bestellungenTableBody').innerHTML = '';
     
     try {
-        const response = await fetch(`${API_URL}?action=getAllOrders`);
+        // NUR NOCH EIN API-CALL statt 3!
+        const response = await fetch(`${API_URL}?action=getBestellungData`);
         const data = await response.json();
         
-        document.getElementById('loadingBestellungUebersicht').style.display = 'none';
-        
         if (!data.success) {
-            document.getElementById('emptyStateBestellungUebersicht').style.display = 'block';
+            throw new Error('API Fehler');
+        }
+        
+        // 1. Preise setzen
+        currentPreisWurst = data.preise.wurst;
+        currentPreisBreze = data.preise.breze;
+        document.getElementById('displayPreisWurst').textContent = 
+            `${currentPreisWurst.toFixed(2).replace('.', ',')} €`;
+        document.getElementById('displayPreisBreze').textContent = 
+            `${currentPreisBreze.toFixed(2).replace('.', ',')} €`;
+        
+        // 2. Event-Status prüfen
+        if (!data.event.active) {
+            document.getElementById('noEventWarningBestellung').style.display = 'block';
+            document.getElementById('bestellFormular').style.display = 'none';
+            document.getElementById('bestellungenContainer').style.display = 'none';
+            document.getElementById('loadingBestellungUebersicht').style.display = 'none';
             return;
         }
         
-        const orders = data.orders || [];
-        
-        if (orders.length === 0) {
-            document.getElementById('emptyStateBestellungUebersicht').style.display = 'block';
-            return;
+        // 3. Event-Datum anzeigen (falls vorhanden)
+        if (data.event.datum) {
+            const eventDateElem = document.getElementById('eventDatumBestellung');
+            if (eventDateElem) {
+                eventDateElem.textContent = `Event: ${data.event.datum}`;
+            }
         }
         
-        const tbody = document.getElementById('ordersTableBodyBestellung');
-        tbody.innerHTML = '';
+        // 4. Bestellungen anzeigen
+        if (!data.orders || data.orders.length === 0) {
+            document.getElementById('bestellungenTableBody').innerHTML = 
+                '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #999;">Noch keine Bestellungen</td></tr>';
+        } else {
+            displayOrdersTableInBestellung(data.orders);
+        }
         
-        let totalWuerste = 0, totalBrezn = 0, totalWuerstePrice = 0, totalBreznPrice = 0;
+        // Formular anzeigen
+        document.getElementById('bestellFormular').style.display = 'block';
+        document.getElementById('bestellungenContainer').style.display = 'block';
         
-        orders.forEach(order => {
-            const wuerste = parseInt(order.wuerste) || 0;
-            const brezn = parseInt(order.brezn) || 0;
-            const preisWurst = parseFloat(order.preisWurst) || 0;
-            const preisBreze = parseFloat(order.preisBreze) || 0;
-            const summe = (wuerste * preisWurst) + (brezn * preisBreze);
-            
-            totalWuerste += wuerste;
-            totalBrezn += brezn;
-            totalWuerstePrice += wuerste * preisWurst;
-            totalBreznPrice += brezn * preisBreze;
-            
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td class="name-cell">${order.name}</td>
-                <td class="item-cell">${wuerste}</td>
-                <td class="item-cell">${brezn}</td>
-                <td style="text-align: right; font-weight: 600; color: #667eea;">${summe.toFixed(2).replace('.', ',')} €</td>
-            `;
-            tbody.appendChild(row);
-        });
-        
-        document.getElementById('totalWuersteBestellung').textContent = totalWuerste;
-        document.getElementById('totalBreznBestellung').textContent = totalBrezn;
-        document.getElementById('totalWuerstePriceBestellung').textContent = totalWuerstePrice.toFixed(2).replace('.', ',') + ' €';
-        document.getElementById('totalBreznPriceBestellung').textContent = totalBreznPrice.toFixed(2).replace('.', ',') + ' €';
-        
-        document.getElementById('contentBestellungUebersicht').style.display = 'block';
     } catch (error) {
+        console.error('Fehler beim Laden:', error);
+        showMessageBestellung('Fehler beim Laden der Daten', 'error');
+    } finally {
         document.getElementById('loadingBestellungUebersicht').style.display = 'none';
-        document.getElementById('emptyStateBestellungUebersicht').style.display = 'block';
     }
 }
+
+
+function displayOrdersTableInBestellung(orders) {
+    const tbody = document.getElementById('bestellungenTableBody');
+    tbody.innerHTML = '';
+    
+    let totalWuerste = 0, totalBrezn = 0, totalSum = 0;
+    
+    orders.forEach(order => {
+        const wuerste = order.wuerste || 0;
+        const brezn = order.brezn || 0;
+        const preisW = order.preisWurst || 0;
+        const preisB = order.preisBreze || 0;
+        const summe = (wuerste * preisW) + (brezn * preisB);
+        
+        totalWuerste += wuerste;
+        totalBrezn += brezn;
+        totalSum += summe;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="name-cell">${order.Name}</td>
+            <td class="item-cell">${wuerste}</td>
+            <td class="item-cell">${brezn}</td>
+            <td style="text-align: right; font-weight: 600; color: #b9052d;">${summe.toFixed(2).replace('.', ',')} €</td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    // Summen-Zeile
+    const sumRow = document.createElement('tr');
+    sumRow.style.fontWeight = '600';
+    sumRow.style.borderTop = '2px solid #b9052d';
+    sumRow.innerHTML = `
+        <td>Gesamt</td>
+        <td class="item-cell">${totalWuerste}</td>
+        <td class="item-cell">${totalBrezn}</td>
+        <td style="text-align: right; color: #b9052d;">${totalSum.toFixed(2).replace('.', ',')} €</td>
+    `;
+    tbody.appendChild(sumRow);
+}
+
+
 
 // Beim Laden der Seite auch anzeigen
 window.addEventListener('DOMContentLoaded', () => {
