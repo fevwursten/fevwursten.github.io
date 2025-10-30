@@ -1013,7 +1013,7 @@ async function confirmUpdate() {
             document.getElementById('wuerste').value = 0;
             document.getElementById('brezn').value = 0;
             updateTotalSum();
-            await loadPricesAndEventStatus();
+           // await loadPricesAndEventStatus();
 			await loadOrdersInBestellung(); // <-- HINZUFÜGEN
         } else {
             showMessage(orderData.message || 'Fehler beim Speichern!', 'error', 'Bestellung');
@@ -1072,7 +1072,7 @@ document.getElementById('orderForm').addEventListener('submit', async (e) => {
             document.getElementById('wuerste').value = 0;
             document.getElementById('brezn').value = 0;
             updateTotalSum();
-            await loadPricesAndEventStatus();
+           // await loadPricesAndEventStatus();
 			await loadOrdersInBestellung(); // <-- HINZUFÜGEN
         } else {
             showMessage(orderData.message || 'Fehler beim Speichern!', 'error', 'Bestellung');
@@ -1198,10 +1198,24 @@ async function loadOrdersInBestellung() {
     }
 }
 
+function afterFirstPaint(fn) {
+  if ('requestIdleCallback' in window) {
+    // Wenn der Browser es kann, starte erst wenn er nichts Wichtiges mehr zu tun hat
+    requestIdleCallback(fn, { timeout: 1500 });
+  } else {
+    // Falls der Browser das nicht kann (älter), starte einfach nach einer kurzen Pause
+    setTimeout(fn, 0);
+  }
+}
+
+
+
+
 // Beim Laden der Seite auch anzeigen
 window.addEventListener('DOMContentLoaded', () => {
-    loadOrdersInBestellung();
+  afterFirstPaint(loadOrdersInBestellung);
 });
+
 
 
 let currentVerwaltungMode = 'user';
